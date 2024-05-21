@@ -50,6 +50,7 @@ module ex(
 
     // from send
     input wire send_busy_i,                  // send运算忙标志
+    input wire[7:0] send_result_i,        //send发送的数据
 
     // to mem
     output reg[`MemBus] mem_wdata_o,        // 写内存数据
@@ -119,6 +120,9 @@ module ex(
     reg[`InstAddrBus] div_jump_addr;
     reg div_start;
     //send相关中间reg
+    reg[`RegBus] send_wdata;
+    reg send_we;
+    reg[`RegAddrBus] div_waddr;
     reg send_hold_flag;
     reg send_jump_flag;
     reg[`InstAddrBus] send_jump_addr;
@@ -169,11 +173,12 @@ module ex(
     assign reg_waddr_o = reg_waddr | div_waddr;
 
     // 响应中断时不写内存
-    assign mem_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: mem_we;
+    assign mem_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (mem_we || send_we);
 
     // 响应中断时不向总线请求访问内存
     assign mem_req_o = (int_assert_i == `INT_ASSERT)? `RIB_NREQ: mem_req;
 
+    //hold方法以及jump，并且处理和中断的关系
     assign hold_flag_o = hold_flag || div_hold_flag || send_hold_flag;/////////或者send中断
     assign jump_flag_o = jump_flag || div_jump_flag || send_jump_flag ||((int_assert_i == `INT_ASSERT)? `JumpEnable: `JumpDisable);/////////或者send跳转
     assign jump_addr_o = (int_assert_i == `INT_ASSERT)? int_addr_i: (jump_addr | div_jump_addr | send_jump_addr);////或者跳转到一个地址，send
@@ -261,20 +266,29 @@ module ex(
 
     // 处理Send_ID///////////
     always @ (*) begin
-        if ((opcode == 7'b0101111) && (funct7 == 3'b000)) begin
+        if ((opcode == 7'b0101111) && (funct7 == 3'b000)) begin //组合逻辑，这个周期内负责传给send模块start信号，并且产生+1的pc地址；下一个周期就进入下面的else
             send_start = 1;
             send_jump_flag = `JumpEnable;
             send_hold_flag = `HoldEnable;
             send_jump_addr = op1_jump_add_op2_jump_res;
+            mem_wdata_o = `ZeroWord;//没有和regdata一样使用 || 的形式， 有可能会一个周期内满足多个memdata就出错了， 只能做逻辑上的保证，否则就会赋值两次， 而不是值的错误
+            mem_waddr_o = `ZeroWord;
+            send_we = `WriteDisable;
         end else begin
             send_jump_flag = `JumpDisable;
-            send_jump_addr = `ZeroWord;
+            send_jump_addr = `ZeroWord; //?????????这个不应该是保持之前的PC吗，还是说下面有别的操作会给一个赋值，使得所以下面会有一个是否hold（√）
             if (send_busy_i == `True) begin
-                send_start = 1;
+                send_start = 1; //一直保持send_start的激活状态，关死需要busy不为0
                 send_hold_flag = `HoldEnable;
+                mem_wdata_o = {24{1'b0},send_result_i};//send一次只能发送八位，高24位用0补齐，防止出现latch
+                mem_waddr_o = 32'h3000_000c;
+                send_we = `WriteEnable;
             end else begin
                 send_start = 0;
                 send_hold_flag = `HoldDisable;
+                mem_wdata_o = `ZeroWord;
+                mem_waddr_o = `ZeroWord;
+                send_we = `WriteDisable;
             end
         end
     end

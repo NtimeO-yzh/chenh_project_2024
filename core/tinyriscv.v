@@ -102,6 +102,8 @@ module tinyriscv(
     wire[`RegBus] ex_div_divisor_o;
     wire[2:0] ex_div_op_o;
     wire[`RegAddrBus] ex_div_reg_waddr_o;
+        //ex中添加send模块的输出
+        wire ex_send_start_o;
     wire[`RegBus] ex_csr_wdata_o;
     wire ex_csr_we_o;
     wire[`MemAddrBus] ex_csr_waddr_o;
@@ -128,6 +130,10 @@ module tinyriscv(
 	wire div_ready_o;
     wire div_busy_o;
     wire[`RegAddrBus] div_reg_waddr_o;
+    
+    //send模块输出信号
+    wire [7:0] send_result_o;
+    wire send_busy_o;
 
     // clint模块输出信号
     wire clint_we_o;
@@ -318,6 +324,9 @@ module tinyriscv(
         .div_divisor_o(ex_div_divisor_o),
         .div_op_o(ex_div_op_o),
         .div_reg_waddr_o(ex_div_reg_waddr_o),
+        .send_busy_i(send_busy_o),
+        .send_result_i(send_result_o),
+        .send_start_o(ex_send_start_o),
         .csr_we_i(ie_csr_we_o),
         .csr_waddr_i(ie_csr_waddr_o),
         .csr_rdata_i(ie_csr_rdata_o),
@@ -340,6 +349,16 @@ module tinyriscv(
         .busy_o(div_busy_o),
         .reg_waddr_o(div_reg_waddr_o)
     );
+
+    //send模块例化
+    send u_send(
+        .clk(clk),
+        .rst(rst),
+        .start_i(ex_send_start_o),
+
+        .result_o(send_result_o),
+        .busy_o(send_busy_o),
+    )
 
     // clint模块例化
     clint u_clint(
