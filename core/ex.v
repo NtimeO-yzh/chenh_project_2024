@@ -48,6 +48,9 @@ module ex(
     input wire div_busy_i,                  // 除法运算忙标志
     input wire[`RegAddrBus] div_reg_waddr_i,// 除法运算结束后要写的寄存器地址
 
+    // from send
+    input wire send_busy_i,                  // send运算忙标志
+
     // to mem
     output reg[`MemBus] mem_wdata_o,        // 写内存数据
     output reg[`MemAddrBus] mem_raddr_o,    // 读内存地址
@@ -71,6 +74,9 @@ module ex(
     output reg[`RegBus] div_divisor_o,      // 除数
     output reg[2:0] div_op_o,               // 具体是哪一条除法指令
     output reg[`RegAddrBus] div_reg_waddr_o,// 除法运算结束后要写的寄存器地址
+
+    // to send
+    output wire send_start_o,                // 开始send标志
 
     // to ctrl
     output wire hold_flag_o,                // 是否暂停标志
@@ -104,18 +110,26 @@ module ex(
     reg[`RegBus] reg_wdata;
     reg reg_we;
     reg[`RegAddrBus] reg_waddr;
+    //div相关中间reg
     reg[`RegBus] div_wdata;
     reg div_we;
     reg[`RegAddrBus] div_waddr;
     reg div_hold_flag;
     reg div_jump_flag;
     reg[`InstAddrBus] div_jump_addr;
+    reg div_start;
+    //send相关中间reg
+    reg send_hold_flag;
+    reg send_jump_flag;
+    reg[`InstAddrBus] send_jump_addr;
+    reg send_start;
+    //////////////////
     reg hold_flag;
     reg jump_flag;
     reg[`InstAddrBus] jump_addr;
     reg mem_we;
     reg mem_req;
-    reg div_start;
+    
 
     assign opcode = inst_i[6:0];
     assign funct3 = inst_i[14:12];
@@ -147,6 +161,7 @@ module ex(
     assign mem_waddr_index = (reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]}) & 2'b11;
 
     assign div_start_o = (int_assert_i == `INT_ASSERT)? `DivStop: div_start;
+    assign send_start_o = (int_assert_i == `INT_ASSERT)? `SendStop: send_start;/////////send+中断
 
     assign reg_wdata_o = reg_wdata | div_wdata;
     // 响应中断时不写通用寄存器
@@ -159,9 +174,9 @@ module ex(
     // 响应中断时不向总线请求访问内存
     assign mem_req_o = (int_assert_i == `INT_ASSERT)? `RIB_NREQ: mem_req;
 
-    assign hold_flag_o = hold_flag || div_hold_flag;
-    assign jump_flag_o = jump_flag || div_jump_flag || ((int_assert_i == `INT_ASSERT)? `JumpEnable: `JumpDisable);
-    assign jump_addr_o = (int_assert_i == `INT_ASSERT)? int_addr_i: (jump_addr | div_jump_addr);
+    assign hold_flag_o = hold_flag || div_hold_flag || send_hold_flag;/////////或者send中断
+    assign jump_flag_o = jump_flag || div_jump_flag || send_jump_flag ||((int_assert_i == `INT_ASSERT)? `JumpEnable: `JumpDisable);/////////或者send跳转
+    assign jump_addr_o = (int_assert_i == `INT_ASSERT)? int_addr_i: (jump_addr | div_jump_addr | send_jump_addr);////或者跳转到一个地址，send
 
     // 响应中断时不写CSR寄存器
     assign csr_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: csr_we_i;
@@ -231,7 +246,7 @@ module ex(
             end else begin
                 div_start = `DivStop;
                 div_hold_flag = `HoldDisable;
-                if (div_ready_i == `DivResultReady) begin
+                if (div_ready_i == `DivResultReady) begin ///这个信号在控制write
                     div_wdata = div_result_i;
                     div_waddr = div_reg_waddr_i;
                     div_we = `WriteEnable;
@@ -240,6 +255,26 @@ module ex(
                     div_wdata = `ZeroWord;
                     div_waddr = `ZeroWord;
                 end
+            end
+        end
+    end
+
+    // 处理Send_ID///////////
+    always @ (*) begin
+        if ((opcode == 7'b0101111) && (funct7 == 3'b000)) begin
+            send_start = 1;
+            send_jump_flag = `JumpEnable;
+            send_hold_flag = `HoldEnable;
+            send_jump_addr = op1_jump_add_op2_jump_res;
+        end else begin
+            send_jump_flag = `JumpDisable;
+            send_jump_addr = `ZeroWord;
+            if (send_busy_i == `True) begin
+                send_start = 1;
+                send_hold_flag = `HoldEnable;
+            end else begin
+                send_start = 0;
+                send_hold_flag = `HoldDisable;
             end
         end
     end
