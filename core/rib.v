@@ -20,8 +20,8 @@
 // RIB总线模块
 module rib(
 
-    input wire clk,
-    input wire rst,
+    //input wire clk,
+    //input wire rst,//组合逻辑
 
     // master 0 interface
     input wire[`MemAddrBus] m0_addr_i,     // 主设备0读、写地址

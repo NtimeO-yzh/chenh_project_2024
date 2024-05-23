@@ -49,8 +49,9 @@ module ex(
     input wire[`RegAddrBus] div_reg_waddr_i,// 除法运算结束后要写的寄存器地址
 
     // from send
-    input wire send_busy_i,                  // send运算忙标志
-    input wire[7:0] send_result_i,        //send发送的数据
+    input wire[31:0] send_ID_i,        //send发送的数据
+    input wire send_busy_i,               //send运算忙标志
+    input wire send_ready_i,             //send改变的we信号，控制是写还是读
 
     // to mem
     output reg[`MemBus] mem_wdata_o,        // 写内存数据
@@ -78,6 +79,10 @@ module ex(
 
     // to send
     output wire send_start_o,                // 开始send标志
+    output wire send_mem_req_o,                   // 标志位，访存的
+    output wire send_mem_we_o,                // 内存读写状态
+    output wire[`MemAddrBus] send_mem_raddr_o,     // 地址，读内存的
+    output wire[`MemBus] send_mem_rdata_o,      //数据，读取内存的
 
     // to ctrl
     output wire hold_flag_o,                // 是否暂停标志
@@ -122,12 +127,13 @@ module ex(
     //send相关中间reg
     reg[`RegBus] send_wdata;
     reg send_we;
+    reg send_req;
     reg[`RegAddrBus] div_waddr;
     reg send_hold_flag;
     reg send_jump_flag;
     reg[`InstAddrBus] send_jump_addr;
     reg send_start;
-    //////////////////
+    ////
     reg hold_flag;
     reg jump_flag;
     reg[`InstAddrBus] jump_addr;
@@ -165,7 +171,7 @@ module ex(
     assign mem_waddr_index = (reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]}) & 2'b11;
 
     assign div_start_o = (int_assert_i == `INT_ASSERT)? `DivStop: div_start;
-    assign send_start_o = (int_assert_i == `INT_ASSERT)? `SendStop: send_start;/////////send+中断
+    
 
     assign reg_wdata_o = reg_wdata | div_wdata;
     // 响应中断时不写通用寄存器
@@ -176,8 +182,14 @@ module ex(
     assign mem_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (mem_we || send_we);
 
     // 响应中断时不向总线请求访问内存
-    assign mem_req_o = (int_assert_i == `INT_ASSERT)? `RIB_NREQ: mem_req;
+    assign mem_req_o = (int_assert_i == `INT_ASSERT)? `RIB_NREQ: (mem_req || send_req);
 
+    //写往内存的地址
+    //assign mem_waddr_o = mem_waddr_o， 其中send模块和下边的执行部分都是直接给这个赋值了
+    //从内存读的地址
+    //assign mem_raddr_o = mem_raddr_o， 其中send模块和下边的执行部分都是直接给这个赋值了
+    //写往内存的数据
+    //assign mem_wdata_o = mem_wdata_o 其中send模块和下边的执行部分都是直接给这个赋值了
     //hold方法以及jump，并且处理和中断的关系
     assign hold_flag_o = hold_flag || div_hold_flag || send_hold_flag;/////////或者send中断
     assign jump_flag_o = jump_flag || div_jump_flag || send_jump_flag ||((int_assert_i == `INT_ASSERT)? `JumpEnable: `JumpDisable);/////////或者send跳转
@@ -264,7 +276,12 @@ module ex(
         end
     end
 
-    // 处理Send_ID///////////
+    // 处理Send_ID/
+    assign send_mem_req_o = mem_req_o;
+    assign send_mem_we_o = mem_we_o;
+    assign send_mem_raddr_o = mem_raddr_o;
+    assign send_mem_rdata_o = mem_rdata_o;
+    assign send_start_o = (int_assert_i == `INT_ASSERT)? 0: send_start;/////////send+中断
     always @ (*) begin
         if ((opcode == 7'b0101111) && (funct7 == 3'b000)) begin //组合逻辑，这个周期内负责传给send模块start信号，并且产生+1的pc地址；下一个周期就进入下面的else
             send_start = 1;
@@ -272,23 +289,34 @@ module ex(
             send_hold_flag = `HoldEnable;
             send_jump_addr = op1_jump_add_op2_jump_res;
             mem_wdata_o = `ZeroWord;//没有和regdata一样使用 || 的形式， 有可能会一个周期内满足多个memdata就出错了， 只能做逻辑上的保证，否则就会赋值两次， 而不是值的错误
-            mem_waddr_o = `ZeroWord;
+            mem_raddr_o = 32'h3000_0000;
+            mem_wdata_o = `ZeroWord;
             send_we = `WriteDisable;
+            send_req = 1;
         end else begin
             send_jump_flag = `JumpDisable;
             send_jump_addr = `ZeroWord; //?????????这个不应该是保持之前的PC吗，还是说下面有别的操作会给一个赋值，使得所以下面会有一个是否hold（√）
             if (send_busy_i == `True) begin
                 send_start = 1; //一直保持send_start的激活状态，关死需要busy不为0
                 send_hold_flag = `HoldEnable;
-                mem_wdata_o = {24{1'b0},send_result_i};//send一次只能发送八位，高24位用0补齐，防止出现latch
+                send_req = 1;
+                mem_wdata_o = send_ID_i;
                 mem_waddr_o = 32'h3000_000c;
-                send_we = `WriteEnable;
+                mem_raddr_o = 32'h3000_0000;
+                if (send_ID_ready_i == 1 ) begin                  
+                    send_we = `WriteEnable;
+                end 
+                else begin
+                    send_we = `WriteDisable;
+                end
             end else begin
                 send_start = 0;
                 send_hold_flag = `HoldDisable;
                 mem_wdata_o = `ZeroWord;
                 mem_waddr_o = `ZeroWord;
                 send_we = `WriteDisable;
+                send_req = 0;
+                mem_raddr_o = `ZeroWord;
             end
         end
     end

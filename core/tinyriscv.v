@@ -43,7 +43,10 @@ module tinyriscv(
     input wire[`INT_BUS] int_i                 // 中断信号
 
     );
-
+    //send模块输出信号
+    wire [31:0] send_ID_o;
+    wire send_busy_o;
+    wire send_ready_o;
     // pc_reg模块输出信号
 	wire[`InstAddrBus] pc_pc_o;
 
@@ -102,11 +105,15 @@ module tinyriscv(
     wire[`RegBus] ex_div_divisor_o;
     wire[2:0] ex_div_op_o;
     wire[`RegAddrBus] ex_div_reg_waddr_o;
-        //ex中添加send模块的输出
-        wire ex_send_start_o;
     wire[`RegBus] ex_csr_wdata_o;
     wire ex_csr_we_o;
     wire[`MemAddrBus] ex_csr_waddr_o;
+        //ex中添加send模块的输出
+        wire ex_send_start_o;               // 开始send标志
+        wire ex_send_mem_req_o;                  // 标志位，访存的
+        wire ex_send_mem_we_o;                // 内存读写状态
+        wire[`MemAddrBus] ex_send_mem_raddr_o;     // 地址，读内存的
+        wire[`MemBus] ex_send_mem_rdata_o;
 
     // regs模块输出信号
     wire[`RegBus] regs_rdata1_o;
@@ -324,15 +331,21 @@ module tinyriscv(
         .div_divisor_o(ex_div_divisor_o),
         .div_op_o(ex_div_op_o),
         .div_reg_waddr_o(ex_div_reg_waddr_o),
-        .send_busy_i(send_busy_o),
-        .send_result_i(send_result_o),
-        .send_start_o(ex_send_start_o),
         .csr_we_i(ie_csr_we_o),
         .csr_waddr_i(ie_csr_waddr_o),
         .csr_rdata_i(ie_csr_rdata_o),
         .csr_wdata_o(ex_csr_wdata_o),
         .csr_we_o(ex_csr_we_o),
-        .csr_waddr_o(ex_csr_waddr_o)
+        .csr_waddr_o(ex_csr_waddr_o),
+        //send交互部分 
+        .send_ID_i(send_ID_o),
+        .send_busy_i(send_busy_o),
+        .send_ready_i(send_ready_o),
+        .send_start_o(ex_send_start_o),
+        .send_mem_req_o(ex_send_mem_req_o),
+        .send_mem_we_o(ex_send_mem_we_o),
+        .send_mem_raddr_o(ex_send_mem_raddr_o),
+        .send_mem_rdata_o(ex_send_mem_rdata_o)
     );
 
     // div模块例化
@@ -354,10 +367,13 @@ module tinyriscv(
     send u_send(
         .clk(clk),
         .rst(rst),
-        .start_i(ex_send_start_o),
-
-        .result_o(send_result_o),
+        .send_start_i(ex_send_start_o),
+        .ex_mem_req_i(ex_send_mem_req_o),
+        .ex_mem_we_i(ex_send_mem_raddr_o)
+        .ex_mem_raddr_i(ex_send_mem_rdata_o),
+        .ID(send_ID_o),
         .busy_o(send_busy_o),
+        .ready_o(send_ready_o),
     )
 
     // clint模块例化
