@@ -369,8 +369,9 @@ module tinyriscv(
         .rst(rst),
         .send_start_i(ex_send_start_o),
         .ex_mem_req_i(ex_send_mem_req_o),
-        .ex_mem_we_i(ex_send_mem_raddr_o)
-        .ex_mem_raddr_i(ex_send_mem_rdata_o),
+        .ex_mem_we_i(ex_send_mem_we_o),
+        .ex_mem_raddr_i(ex_send_mem_raddr_o),
+        .ex_mem_rdata_i(ex_send_mem_rdata_o),
         .ID(send_ID_o),
         .busy_o(send_busy_o),
         .ready_o(send_ready_o),
