@@ -85,8 +85,17 @@ module id(
         case (opcode)
             7'b0101111: begin
                 case (funct3)
-                    000: begin
-                        reg_we_o = `WriteDisable;
+                    000: begin//send
+                        op1_jump_o = inst_addr_i;
+                        op2_jump_o = 32'h4;
+                    end
+                    010: begin //fire
+                        reg_we_o = `WriteEnable;
+                        reg_waddr_o = rd;
+                        reg1_raddr_o = rs1;
+                        reg2_raddr_o = 5'd31;
+                        op1_o = reg1_rdata_i;
+                        op2_o = {{20{inst_i[31]}}, inst_i[31:20]};
                         op1_jump_o = inst_addr_i;
                         op2_jump_o = 32'h4;
                     end
