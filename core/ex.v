@@ -368,7 +368,7 @@ module ex(
             send_hold_flag = `HoldEnable;
             send_jump_addr = op1_jump_add_op2_jump_res;
             send_mem_wdata = `ZeroWord;//没有和regdata一样使用 || 的形式， 有可能会一个周期内满足多个memdata就出错了， 只能做逻辑上的保证，否则就会赋值两次， 而不是值的错误
-            send_mem_raddr = 32'h3000_0000;
+            send_mem_raddr = 32'h3000_0004;
             send_mem_wdata = `ZeroWord;
             send_we = `WriteDisable;
             send_req = 1;
@@ -381,7 +381,7 @@ module ex(
                 send_req = 1;
                 send_mem_wdata = send_ID_i;
                 send_mem_waddr = 32'h3000_000c;
-                send_mem_raddr = 32'h3000_0000;
+                send_mem_raddr = 32'h3000_0004;
                 if (send_ID_ready_i == 1 ) begin                  
                     send_we = `WriteEnable;
                 end 

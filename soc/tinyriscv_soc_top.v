@@ -320,6 +320,12 @@ module tinyriscv_soc_top(
         .s5_data_i(s5_data_i),
         .s5_we_o(s5_we_o),
 
+        // slave 6 interface
+        .s6_addr_o(s6_addr_o),
+        .s6_data_o(s6_data_o),
+        .s6_data_i(s6_data_i),
+        .s6_we_o(s6_we_o),
+
         .hold_flag_o(rib_hold_flag_o)
     );
 

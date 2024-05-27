@@ -50,7 +50,7 @@ module send(
         else begin
             if (count <= 8) begin
                 busy_o <= 1;
-                if ((send_start_i)==1||(mem_we_o==0)||(mem_raddr_o==32'h300000005)||(mem_rdata_i[0]=0)||(ex_mem_req_i==1)) begin
+                if ((send_start_i)==1||(mem_we_o==0)||(mem_raddr_o==32'h300000004)||(mem_rdata_i[0]=0)||(ex_mem_req_i==1)) begin
                     count <= count +1;
                     ID_ready_o <= 1;
                 end
@@ -60,7 +60,7 @@ module send(
             end
             else begin
                 ID_ready_o <= 0;
-                if ((send_start_i)==1||(mem_we_o==0)||(mem_raddr_o==32'h300000005)||(mem_rdata_i[0]=0)||(ex_mem_req_i==1)) begin
+                if ((send_start_i)==1||(mem_we_o==0)||(mem_raddr_o==32'h300000004)||(mem_rdata_i[0]=0)||(ex_mem_req_i==1)) begin
                     busy_o <= 0;
                 end else begin
                      busy_o <= 1;
