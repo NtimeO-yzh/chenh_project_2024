@@ -43,6 +43,9 @@ module tinyriscv(
     input wire[`INT_BUS] int_i                 // 中断信号
 
     );
+    //fire模块输出信号
+    wire fire_busy_o;
+    wire fire_ready_o;
     //send模块输出信号
     wire [31:0] send_ID_o;
     wire send_busy_o;
@@ -114,6 +117,12 @@ module tinyriscv(
         wire ex_send_mem_we_o;                // 内存读写状态
         wire[`MemAddrBus] ex_send_mem_raddr_o;     // 地址，读内存的
         wire[`MemBus] ex_send_mem_rdata_o;
+        //ex中添加fire模块的输出
+        wire ex_fire_start_o;               // 开始fire标志
+        wire ex_fire_mem_req_o;                  // 标志位，访存的
+        wire ex_fire_mem_we_o;                // 内存读写状态
+        wire[`MemAddrBus] ex_fire_mem_raddr_o;     // 地址，读内存的
+        wire[`MemBus] ex_fire_mem_rdata_o;
 
     // regs模块输出信号
     wire[`RegBus] regs_rdata1_o;
@@ -137,10 +146,6 @@ module tinyriscv(
 	wire div_ready_o;
     wire div_busy_o;
     wire[`RegAddrBus] div_reg_waddr_o;
-    
-    //send模块输出信号
-    wire [7:0] send_result_o;
-    wire send_busy_o;
 
     // clint模块输出信号
     wire clint_we_o;
@@ -346,6 +351,14 @@ module tinyriscv(
         .send_mem_we_o(ex_send_mem_we_o),
         .send_mem_raddr_o(ex_send_mem_raddr_o),
         .send_mem_rdata_o(ex_send_mem_rdata_o)
+        //fire交互部分 
+        .fire_busy_i(fire_busy_o),
+        .fire_ready_i(fire_ready_o),
+        .fire_start_o(ex_fire_start_o),
+        .fire_mem_req_o(ex_fire_mem_req_o),
+        .fire_mem_we_o(ex_fire_mem_we_o),
+        .fire_mem_raddr_o(ex_fire_mem_raddr_o),
+        .fire_mem_rdata_o(ex_fire_mem_rdata_o)
     );
 
     // div模块例化
@@ -375,6 +388,19 @@ module tinyriscv(
         .ID(send_ID_o),
         .busy_o(send_busy_o),
         .ready_o(send_ready_o),
+    )
+
+    //fire模块例化
+    fire u_fire(
+        .clk(clk),
+        .rst(rst),
+        .fire_start_i(ex_fire_start_o),
+        .ex_mem_req_i(ex_fire_mem_req_o),
+        .ex_mem_we_i(ex_fire_mem_we_o),
+        .ex_mem_raddr_i(ex_fire_mem_raddr_o),
+        .ex_mem_rdata_i(ex_fire_mem_rdata_o),
+        .busy_o(fire_busy_o),
+        .ready_o(fire_ready_o),
     )
 
     // clint模块例化

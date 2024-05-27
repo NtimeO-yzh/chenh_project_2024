@@ -47,6 +47,9 @@ module ex(
     input wire[`RegBus] div_result_i,       // 除法运算结果
     input wire div_busy_i,                  // 除法运算忙标志
     input wire[`RegAddrBus] div_reg_waddr_i,// 除法运算结束后要写的寄存器地址
+    // from send
+    input wire fire_busy_i,               //fire运算忙标志
+    input wire fire_ready_i,             //fire改变的we信号，控制是写还是读
 
     // from send
     input wire[31:0] send_ID_i,        //send发送的数据
@@ -76,6 +79,13 @@ module ex(
     output reg[`RegBus] div_divisor_o,      // 除数
     output reg[2:0] div_op_o,               // 具体是哪一条除法指令
     output reg[`RegAddrBus] div_reg_waddr_o,// 除法运算结束后要写的寄存器地址
+
+    // to fire
+    output wire fire_start_o,                // 开始fire标志
+    output wire fire_mem_req_o,                   // 标志位，访存的
+    output wire fire_mem_we_o,                // 内存读写状态
+    output wire[`MemAddrBus] fire_mem_raddr_o,     // 地址，读内存的
+    output wire[`MemBus] fire_mem_rdata_o,      //数据，读取内存的
 
     // to send
     output wire send_start_o,                // 开始send标志
@@ -122,6 +132,19 @@ module ex(
     reg div_jump_flag;
     reg[`InstAddrBus] div_jump_addr;
     reg div_start;
+    //fire相关中间reg
+    reg fire_start;
+    reg fire_mem_we;
+    reg fire_req;
+    reg fire_hold_flag;
+    reg fire_jump_flag;
+    reg fire_reg_we;
+    reg[`InstAddrBus] fire_jump_addr;
+    reg[`MemAddrBus] fire_mem_waddr;
+    reg[`MemAddrBus] fire_mem_raddr;
+    reg[`MemBus] fire_mem_wdata;
+    reg[`RegBus] fire_reg_wdata;
+    reg[`RegAddrBus] fire_reg_waddr;
     //send相关中间reg
     reg send_start;
     reg send_we;
