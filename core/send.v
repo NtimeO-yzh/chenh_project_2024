@@ -23,33 +23,34 @@ module send(
 
     // 状态定义
     reg [4:0] count;
+    reg ID_ready_o;
     always @* begin
         case(count) 
-            0: ID=32'h00000032;
-            1: ID=32'h00000030;
-            2: ID=32'h00000032;
-            3: ID=32'h00000033;
-            4: ID=32'h00000032;
-            5: ID=32'h00000031;
+            1: ID=32'h00000032;
+            2: ID=32'h00000030;
+            3: ID=32'h00000032;
+            4: ID=32'h00000033;
+            5: ID=32'h00000032;
             6: ID=32'h00000031;
-            7: ID=32'h00000030;
-            8: ID=32'h00000031;
-            9: ID=32'h00000033;
-            10: ID=32'h00000000;
+            7: ID=32'h00000031;
+            8: ID=32'h00000030;
+            9: ID=32'h00000031;
+            10: ID=32'h00000033;
+            default:1: ID=32'h00000000;
         endcase
 
     end
+    assign ready_o =ID_ready_o;
     // 状态机实现
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin
-            ID <= 32'b0;
             busy_o <= 0;
             ID_ready_o <= 1;
         end
         else begin
             if (count <= 8) begin
                 busy_o <= 1;
-                if ((send_start_i)==1||(mem_we_o==0)||(mem_raddr_o==32'h30000004)||(mem_rdata_i[0]=0)||(ex_mem_req_i==1)) begin
+                if ((send_start_i)==1||(mem_we_o==0)||(mem_raddr_o==32'h300000005)||(mem_rdata_i[0]=0)||(ex_mem_req_i==1)) begin
                     count <= count +1;
                     ID_ready_o <= 1;
                 end
@@ -58,8 +59,12 @@ module send(
                 end
             end
             else begin
-                busy_o <= 0;
-                ready_o <= 0;
+                ID_ready_o <= 0;
+                if ((send_start_i)==1||(mem_we_o==0)||(mem_raddr_o==32'h300000005)||(mem_rdata_i[0]=0)||(ex_mem_req_i==1)) begin
+                    busy_o <= 0;
+                end else begin
+                     busy_o <= 1;
+                end
             end
         end
     end

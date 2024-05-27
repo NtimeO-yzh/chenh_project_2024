@@ -179,10 +179,10 @@ module ex(
     assign div_start_o = (int_assert_i == `INT_ASSERT)? `DivStop: div_start;
     
 
-    assign reg_wdata_o = reg_wdata | div_wdata;
+    assign reg_wdata_o = reg_wdata | div_wdata |fire_reg_wdata;
     // 响应中断时不写通用寄存器
-    assign reg_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (reg_we || div_we);
-    assign reg_waddr_o = reg_waddr | div_waddr;
+    assign reg_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (reg_we || div_we || fire_reg_we);
+    assign reg_waddr_o = reg_waddr | div_waddr |fire_reg_waddr;
 
     // 响应中断时不写内存
     assign mem_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (mem_we || send_we);
@@ -282,6 +282,56 @@ module ex(
         end
     end
 
+    // 处理fire_1/
+    assign fire_mem_req_o = mem_req_o;
+    assign fire_mem_we_o = mem_we_o;
+    assign fire_mem_raddr_o = mem_raddr_o;
+    assign fire_mem_rdata_o = mem_rdata_o;
+    assign fire_start_o = (int_assert_i == `INT_ASSERT)? 0: fire_start;/////////fire+中断
+    always @ (*) begin
+        if ((opcode == 7'b0101111) && (funct3 == 3'b010) && (inst_i[31:20]==11'b0) && reg1_rdata >= reg2_rdata) begin //组合逻辑，这个周期内负责传给fire模块start信号，并且产生+1的pc地址；下一个周期就进入下面的else
+            fire_start = 1;
+            fire_jump_flag = `JumpEnable;
+            fire_hold_flag = `HoldEnable;
+            fire_jump_addr = op1_jump_add_op2_jump_res;
+            fire_mem_wdata = `ZeroWord;//没有和regdata一样使用 || 的形式， 有可能会一个周期内满足多个memdata就出错了， 只能做逻辑上的保证，否则就会赋值两次， 而不是值的错误
+            fire_mem_raddr = 32'h3000_0000;
+            fire_mem_wdata = `ZeroWord;
+            fire_mem_we = `WriteDisable;
+            fire_req = 1;
+            fire_reg_wdata = 32'b0;
+            fire_reg_we = `WriteEnable;
+            fire_reg_waddr = reg_waddr_i;
+        end else begin
+            fire_jump_flag = `JumpDisable;
+            fire_jump_addr = `ZeroWord; //?????????这个不应该是保持之前的PC吗，还是说下面有别的操作会给一个赋值，使得所以下面会有一个是否hold（√）
+            fire_reg_wdata = `ZeroWord;
+            fire_reg_we = `WriteDisable;
+            fire_reg_waddr = reg_waddr_i;
+            if (fire_busy_i == `True) begin
+                fire_start = 1; //一直保持fire_start的激活状态，关死需要busy不为0
+                fire_hold_flag = `HoldEnable;
+                fire_req = 1;
+                fire_mem_wdata = reg1_rdata;
+                fire_mem_waddr = 32'h3000_000c;
+                fire_mem_raddr = 32'h3000_0000;
+                if (fire_ID_ready_i == 1 ) begin                  
+                    fire_mem_we = `WriteEnable;
+                end 
+                else begin
+                    fire_mem_we = `WriteDisable;
+                end
+            end else begin
+                fire_start = 0;
+                fire_hold_flag = `HoldDisable;
+                fire_mem_wdata = `ZeroWord;
+                fire_mem_waddr = `ZeroWord;
+                fire_mem_we = `WriteDisable;
+                fire_req = 0;
+                fire_mem_raddr = `ZeroWord;
+            end
+        end
+    end
     // 处理Send_ID/
     assign send_mem_req_o = mem_req_o;
     assign send_mem_we_o = mem_we_o;
@@ -325,7 +375,7 @@ module ex(
                 send_mem_raddr = `ZeroWord;
             end
         end
-    end
+    end   
     // 执行
     always @ (*) begin
         reg_we = reg_we_i;
@@ -334,6 +384,58 @@ module ex(
         csr_wdata_o = `ZeroWord;
 
         case (opcode)
+            7'b0101111:
+                case (funct3)
+                    010: begin
+                        if(inst_i[31:20]==11'b0) begin
+                            if (reg1_rdata < reg2_rdata) begin
+                                reg_wdata = reg1_rdata;
+                                reg_we = `WriteEnable;
+                                reg_waddr = reg_waddr_i;
+                                jump_flag = `JumpDisable;
+                                hold_flag = `HoldDisable;
+                                jump_addr = `ZeroWord;
+                                mem_wdata = `ZeroWord;
+                                mem_raddr = `ZeroWord;
+                                mem_waddr = `ZeroWord;
+                                mem_we = `WriteDisable;
+                            end else begin
+                                reg_wdata = `ZeroWord;
+                                reg_we = `WriteDisable;
+                                reg_waddr = `ZeroWord;
+                                jump_flag = `JumpDisable;
+                                hold_flag = `HoldDisable;
+                                jump_addr = `ZeroWord;
+                                mem_wdata = `ZeroWord;
+                                mem_raddr = `ZeroWord;
+                                mem_waddr = `ZeroWord;
+                                mem_we = `WriteDisable;
+                            end
+                        end else begin
+                            reg_wdata = reg1_rdata+{{20{inst_i[31]}}, inst_i[31:20]};;
+                            reg_we = `WriteEnable;
+                            reg_waddr = reg_waddr_i;
+                            jump_flag = `JumpDisable;
+                            hold_flag = `HoldDisable;
+                            jump_addr = `ZeroWord;
+                            mem_wdata = `ZeroWord;
+                            mem_raddr = `ZeroWord;
+                            mem_waddr = `ZeroWord;
+                            mem_we = `WriteDisable;
+
+                        end
+                    end
+                    default: begin
+                        jump_flag = `JumpDisable;
+                        hold_flag = `HoldDisable;
+                        jump_addr = `ZeroWord;
+                        mem_wdata = `ZeroWord;
+                        mem_raddr = `ZeroWord;
+                        mem_waddr = `ZeroWord;
+                        mem_we = `WriteDisable;
+                        reg_wdata = `ZeroWord;
+                    end
+                endcase
             `INST_TYPE_I: begin
                 case (funct3)
                     `INST_ADDI: begin
