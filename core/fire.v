@@ -33,7 +33,7 @@ module fire(
         else begin
             if (count != 1) begin
                 busy_o <= 1;
-                if ((fire_start_i)==1||(mem_we_o==0)||(mem_raddr_o==32'h30000000)||(mem_rdata_i[0]=0)||(ex_mem_req_i==1)) begin
+                if ((fire_start_i)==1||(ex_mem_we_i==0)||(ex_mem_raddr_i==32'h30000000)||(ex_mem_rdata_i[0]==0)||(ex_mem_req_i==1)) begin
                     count <= 1;
                     fire_ready_o <= 1;
                 end
@@ -43,7 +43,7 @@ module fire(
             end
             else begin
                 fire_ready_o <= 0;
-                if ((fire_start_i)==1||(mem_we_o==0)||(mem_raddr_o==32'h30000000)||(mem_rdata_i[0]=0)||(ex_mem_req_i==1)) begin
+                if ((fire_start_i)==1||(ex_mem_we_i==0)||(ex_mem_raddr_i==32'h30000000)||(ex_mem_rdata_i[0]==0)||(ex_mem_req_i==1)) begin
                     busy_o <= 0;
                 end else begin
                     busy_o <= 1;

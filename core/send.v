@@ -44,12 +44,13 @@ module send(
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin
             busy_o <= 0;
-            ID_ready_o <= 1;
+            ID_ready_o <= 0;
+            count <= 4'b0;
         end
         else begin
-            if (count <= 8) begin
+            if (count <= 9 && (send_start_i)==1) begin
                 busy_o <= 1;
-                if ((send_start_i)==1||(ex_mem_we_i==0)||(ex_mem_raddr_i==32'h30000004)||(ex_mem_rdata_i[0]==0)||(ex_mem_req_i==1)) begin
+                if ((ex_mem_we_i==0)&&(ex_mem_raddr_i==32'h30000004)&&(ex_mem_rdata_i[0]==0)&&(ex_mem_req_i==1)) begin
                     count <= count +1;
                     ID_ready_o <= 1;
                 end
@@ -59,11 +60,7 @@ module send(
             end
             else begin
                 ID_ready_o <= 0;
-                if ((send_start_i)==1||(ex_mem_we_i==0)||(ex_mem_raddr_i==32'h30000004)||(ex_mem_rdata_i[0]==0)||(ex_mem_req_i==1)) begin
-                    busy_o <= 0;
-                end else begin
-                     busy_o <= 1;
-                end
+                busy_o <= 0;
             end
         end
     end
