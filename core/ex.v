@@ -47,7 +47,8 @@ module ex(
     input wire[`RegBus] div_result_i,       // 除法运算结果
     input wire div_busy_i,                  // 除法运算忙标�?
     input wire[`RegAddrBus] div_reg_waddr_i,// 除法运算结束后要写的寄存器地�?
-    // from send
+    // from fire
+    input wire[`MemBus] fire_i,
     input wire fire_busy_i,               //fire运算忙标�?
     input wire fire_ready_i,             //fire改变的we信号，控制是写还是读
 
@@ -81,11 +82,13 @@ module ex(
     output reg[`RegAddrBus] div_reg_waddr_o,// 除法运算结束后要写的寄存器地�?
 
     // to fire
+
     output wire fire_start_o,                // �?始fire标志
     output wire fire_mem_req_o,                   // 标志位，访存�?
     output wire fire_mem_we_o,                // 内存读写状�??
     output wire[`MemAddrBus] fire_mem_raddr_o,     // 地址，读内存�?
     output wire[`MemBus] fire_mem_rdata_o,      //数据，读取内存的
+    output wire[`RegBus] fire_mem_wdata_o,
 
     // to send
     output wire send_start_o,                // �?始send标志
@@ -208,21 +211,21 @@ module ex(
     assign reg_waddr_o = reg_waddr | div_waddr |fire_reg_waddr;
 
     // 响应中断时不写内�?
-    assign mem_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (mem_we || send_we);
+    assign mem_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (mem_we || send_we || fire_mem_we);
 
     // 响应中断时不向�?�线请求访问内存
-    assign mem_req_o = (int_assert_i == `INT_ASSERT)? `RIB_NREQ: (mem_req || send_req);
+    assign mem_req_o = (int_assert_i == `INT_ASSERT)? `RIB_NREQ: (mem_req || send_req || fire_req);
 
     //写往内存的地�?
-    assign mem_waddr_o = mem_waddr|send_mem_waddr;
+    assign mem_waddr_o = mem_waddr|send_mem_waddr|fire_mem_waddr;
     //从内存读的地�?
-    assign mem_raddr_o = mem_raddr|send_mem_raddr;
+    assign mem_raddr_o = mem_raddr|send_mem_raddr|fire_mem_raddr;
     //写往内存的数�?
-    assign mem_wdata_o = mem_wdata|send_mem_wdata;
+    assign mem_wdata_o = mem_wdata|send_mem_wdata|fire_mem_wdata;
     //hold方法以及jump，并且处理和中断的关�?
-    assign hold_flag_o = hold_flag || div_hold_flag || send_hold_flag;/////////或�?�send中断
-    assign jump_flag_o = jump_flag || div_jump_flag || send_jump_flag ||((int_assert_i == `INT_ASSERT)? `JumpEnable: `JumpDisable);/////////或�?�send跳转
-    assign jump_addr_o = (int_assert_i == `INT_ASSERT)? int_addr_i: (jump_addr | div_jump_addr | send_jump_addr);////或�?�跳转到�?个地�?，send
+    assign hold_flag_o = hold_flag || div_hold_flag || send_hold_flag||fire_hold_flag;/////////或�?�send中断
+    assign jump_flag_o = jump_flag || div_jump_flag || send_jump_flag ||fire_jump_flag||((int_assert_i == `INT_ASSERT)? `JumpEnable: `JumpDisable);/////////或�?�send跳转
+    assign jump_addr_o = (int_assert_i == `INT_ASSERT)? int_addr_i: (jump_addr | div_jump_addr | send_jump_addr|fire_jump_addr);////或�?�跳转到�?个地�?，send
 
     // 响应中断时不写CSR寄存�?
     assign csr_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: csr_we_i;
@@ -310,6 +313,7 @@ module ex(
     assign fire_mem_we_o = mem_we_o;
     assign fire_mem_raddr_o = mem_raddr_o;
     assign fire_mem_rdata_o = mem_rdata_i;
+    assign fire_mem_wdata_o = fire_mem_wdata;
     assign fire_start_o = (int_assert_i == `INT_ASSERT)? 0: fire_start;/////////fire+中断
     always @ (*) begin
         if ((opcode == 7'b0101111) && (funct3 == 3'b010) && (inst_i[31:20]==11'b0) && reg1_rdata_i >= reg2_rdata_i) begin //组合逻辑，这个周期内负责传给fire模块start信号，并且产�?+1的pc地址；下�?个周期就进入下面的else
@@ -317,9 +321,8 @@ module ex(
             fire_jump_flag = `JumpEnable;
             fire_hold_flag = `HoldEnable;
             fire_jump_addr = op1_jump_add_op2_jump_res;
-            fire_mem_wdata = `ZeroWord;//没有和regdata�?样使�? || 的形式， 有可能会�?个周期内满足多个memdata就出错了�? 只能做�?�辑上的保证，否则就会赋值两次， 而不是�?�的错误
-            fire_mem_raddr = 32'h3000_0000;
-            fire_mem_wdata = `ZeroWord;
+            fire_mem_raddr = 32'h3000_0004;
+            fire_mem_wdata = reg1_rdata_i;
             fire_mem_we = `WriteDisable;
             fire_req = 1;
             fire_reg_wdata = 32'b0;
@@ -335,9 +338,9 @@ module ex(
                 fire_start = 1; //�?直保持fire_start的激活状态，关死�?要busy不为0
                 fire_hold_flag = `HoldEnable;
                 fire_req = 1;
-                fire_mem_wdata = reg1_rdata_i;
+                fire_mem_wdata = fire_i;
                 fire_mem_waddr = 32'h3000_000c;
-                fire_mem_raddr = 32'h3000_0000;
+                fire_mem_raddr = 32'h3000_0004;
                 if (fire_ready_i == 1 ) begin                  
                     fire_mem_we = `WriteEnable;
                 end 
@@ -409,7 +412,7 @@ module ex(
         case (opcode)
             7'b0101111:
                 case (funct3)
-                    010: begin
+                    3'b010: begin
                         if(inst_i[31:20]==11'b0) begin
                             if (reg1_rdata_i < reg2_rdata_i) begin
                                 reg_wdata = reg1_rdata_i;

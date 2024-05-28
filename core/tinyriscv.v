@@ -44,10 +44,11 @@ module tinyriscv(
 
     );
     //fire模块输出信号
+    wire [`MemBus] fire_o;
     wire fire_busy_o;
     wire fire_ready_o;
     //send模块输出信号
-    wire [31:0] send_ID_o;
+    wire [`MemBus] send_ID_o;
     wire send_busy_o;
     wire send_ready_o;
     // pc_reg模块输出信号
@@ -123,6 +124,7 @@ module tinyriscv(
         wire ex_fire_mem_we_o;                // 内存读写状�??
         wire[`MemAddrBus] ex_fire_mem_raddr_o;     // 地址，读内存�?
         wire[`MemBus] ex_fire_mem_rdata_o;
+        wire[`MemBus] ex_fire_mem_wdata_o;
 
     // regs模块输出信号
     wire[`RegBus] regs_rdata1_o;
@@ -352,13 +354,15 @@ module tinyriscv(
         .send_mem_raddr_o(ex_send_mem_raddr_o),
         .send_mem_rdata_o(ex_send_mem_rdata_o),
         //fire交互部分 
+        .fire_i(fire_o),
         .fire_busy_i(fire_busy_o),
         .fire_ready_i(fire_ready_o),
         .fire_start_o(ex_fire_start_o),
         .fire_mem_req_o(ex_fire_mem_req_o),
         .fire_mem_we_o(ex_fire_mem_we_o),
         .fire_mem_raddr_o(ex_fire_mem_raddr_o),
-        .fire_mem_rdata_o(ex_fire_mem_rdata_o)
+        .fire_mem_rdata_o(ex_fire_mem_rdata_o),
+        .fire_mem_wdata_o(ex_fire_mem_wdata_o)
     );
 
     // div模块例化
@@ -399,6 +403,8 @@ module tinyriscv(
         .ex_mem_we_i(ex_fire_mem_we_o),
         .ex_mem_raddr_i(ex_fire_mem_raddr_o),
         .ex_mem_rdata_i(ex_fire_mem_rdata_o),
+        .ex_mem_wdata_i(ex_fire_mem_wdata_o),
+        .fire_o(fire_o),
         .busy_o(fire_busy_o),
         .ready_o(fire_ready_o)
     );

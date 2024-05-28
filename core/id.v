@@ -17,7 +17,7 @@
 `include "defines.v"
 
 // 译码模块
-// 纯组合逻辑电路
+// 纯组合�?�辑电路
 module id(
 
 	input wire rst,
@@ -27,21 +27,21 @@ module id(
     input wire[`InstAddrBus] inst_addr_i,    // 指令地址
 
     // from regs
-    input wire[`RegBus] reg1_rdata_i,        // 通用寄存器1输入数据
-    input wire[`RegBus] reg2_rdata_i,        // 通用寄存器2输入数据
+    input wire[`RegBus] reg1_rdata_i,        // 通用寄存�?1输入数据
+    input wire[`RegBus] reg2_rdata_i,        // 通用寄存�?2输入数据
 
     // from csr reg
-    input wire[`RegBus] csr_rdata_i,         // CSR寄存器输入数据
+    input wire[`RegBus] csr_rdata_i,         // CSR寄存器输入数�?
 
     // from ex
     input wire ex_jump_flag_i,               // 跳转标志
 
     // to regs
-    output reg[`RegAddrBus] reg1_raddr_o,    // 读通用寄存器1地址
-    output reg[`RegAddrBus] reg2_raddr_o,    // 读通用寄存器2地址
+    output reg[`RegAddrBus] reg1_raddr_o,    // 读�?�用寄存�?1地址
+    output reg[`RegAddrBus] reg2_raddr_o,    // 读�?�用寄存�?2地址
 
     // to csr reg
-    output reg[`MemAddrBus] csr_raddr_o,     // 读CSR寄存器地址
+    output reg[`MemAddrBus] csr_raddr_o,     // 读CSR寄存器地�?
 
     // to ex
     output reg[`MemAddrBus] op1_o,
@@ -50,13 +50,13 @@ module id(
     output reg[`MemAddrBus] op2_jump_o,
     output reg[`InstBus] inst_o,             // 指令内容
     output reg[`InstAddrBus] inst_addr_o,    // 指令地址
-    output reg[`RegBus] reg1_rdata_o,        // 通用寄存器1数据
-    output reg[`RegBus] reg2_rdata_o,        // 通用寄存器2数据
-    output reg reg_we_o,                     // 写通用寄存器标志
-    output reg[`RegAddrBus] reg_waddr_o,     // 写通用寄存器地址
-    output reg csr_we_o,                     // 写CSR寄存器标志
-    output reg[`RegBus] csr_rdata_o,         // CSR寄存器数据
-    output reg[`MemAddrBus] csr_waddr_o      // 写CSR寄存器地址
+    output reg[`RegBus] reg1_rdata_o,        // 通用寄存�?1数据
+    output reg[`RegBus] reg2_rdata_o,        // 通用寄存�?2数据
+    output reg reg_we_o,                     // 写�?�用寄存器标�?
+    output reg[`RegAddrBus] reg_waddr_o,     // 写�?�用寄存器地�?
+    output reg csr_we_o,                     // 写CSR寄存器标�?
+    output reg[`RegBus] csr_rdata_o,         // CSR寄存器数�?
+    output reg[`MemAddrBus] csr_waddr_o      // 写CSR寄存器地�?
 
     );
 
@@ -89,7 +89,7 @@ module id(
                         op1_jump_o = inst_addr_i;
                         op2_jump_o = 32'h4;
                     end
-                    010: begin //fire
+                    3'b010: begin //fire
                         reg_we_o = `WriteEnable;
                         reg_waddr_o = rd;
                         reg1_raddr_o = rs1;
