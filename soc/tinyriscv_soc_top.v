@@ -29,7 +29,8 @@ module tinyriscv_soc_top(
 
     input wire uart_debug_pin, // 串口下载使能引脚
 
-    output wire uart_tx_pin, // UART发送引脚
+    output wire uart_tx_pin, // UART发�?�引�?
+    output wire pwm_pin0,pwm_pin1,pwm_pin2,pwm_pin3,
     input wire uart_rx_pin,  // UART接收引脚
     inout wire[15:0] gpio,    // GPIO引脚
 
@@ -109,6 +110,12 @@ module tinyriscv_soc_top(
     wire[`MemBus] s5_data_o;
     wire[`MemBus] s5_data_i;
     wire s5_we_o;
+
+    // slave 6 interface
+    wire[`MemAddrBus] s6_addr_o;
+    wire[`MemBus] s6_data_o;
+    wire[`MemBus] s6_data_i;
+    wire s6_we_o;
 
     // rib
     wire rib_hold_flag_o;
@@ -215,6 +222,20 @@ module tinyriscv_soc_top(
         .data_o(s3_data_i),
         .tx_pin(uart_tx_pin),
         .rx_pin(uart_rx_pin)
+    );
+    
+    pwm pwm_0(
+        .clk(clk),
+        .rst(rst),
+        .we_i(s6_we_o),
+        .addr_i(s6_addr_o),
+        .data_i(s6_data_o),
+        .data_o(s6_data_i),
+        .pw_pin0(pw_pin0),
+        .pw_pin1(pw_pin1),
+        .pw_pin2(pw_pin2),
+        .pw_pin3(pw_pin3)
+
     );
 
     // io0
