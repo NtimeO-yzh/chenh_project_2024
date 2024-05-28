@@ -22,19 +22,19 @@ module tinyriscv(
     input wire clk,
     input wire rst,
 
-    output wire[`MemAddrBus] rib_ex_addr_o,    // 读、写外设的地址
+    output wire[`MemAddrBus] rib_ex_addr_o,    // 读�?�写外设的地�?
     input wire[`MemBus] rib_ex_data_i,         // 从外设读取的数据
-    output wire[`MemBus] rib_ex_data_o,        // 写入外设的数据
+    output wire[`MemBus] rib_ex_data_o,        // 写入外设的数�?
     output wire rib_ex_req_o,                  // 访问外设请求
-    output wire rib_ex_we_o,                   // 写外设标志
+    output wire rib_ex_we_o,                   // 写外设标�?
 
     output wire[`MemAddrBus] rib_pc_addr_o,    // 取指地址
-    input wire[`MemBus] rib_pc_data_i,         // 取到的指令内容
+    input wire[`MemBus] rib_pc_data_i,         // 取到的指令内�?
 
-    input wire[`RegAddrBus] jtag_reg_addr_i,   // jtag模块读、写寄存器的地址
+    input wire[`RegAddrBus] jtag_reg_addr_i,   // jtag模块读�?�写寄存器的地址
     input wire[`RegBus] jtag_reg_data_i,       // jtag模块写寄存器数据
     input wire jtag_reg_we_i,                  // jtag模块写寄存器标志
-    output wire[`RegBus] jtag_reg_data_o,      // jtag模块读取到的寄存器数据
+    output wire[`RegBus] jtag_reg_data_o,      // jtag模块读取到的寄存器数�?
 
     input wire rib_hold_flag_i,                // 总线暂停标志
     input wire jtag_halt_flag_i,               // jtag暂停标志
@@ -111,17 +111,17 @@ module tinyriscv(
     wire[`RegBus] ex_csr_wdata_o;
     wire ex_csr_we_o;
     wire[`MemAddrBus] ex_csr_waddr_o;
-        //ex中添加send模块的输出
-        wire ex_send_start_o;               // 开始send标志
-        wire ex_send_mem_req_o;                  // 标志位，访存的
-        wire ex_send_mem_we_o;                // 内存读写状态
-        wire[`MemAddrBus] ex_send_mem_raddr_o;     // 地址，读内存的
+        //ex中添加send模块的输�?
+        wire ex_send_start_o;               // �?始send标志
+        wire ex_send_mem_req_o;                  // 标志位，访存�?
+        wire ex_send_mem_we_o;                // 内存读写状�??
+        wire[`MemAddrBus] ex_send_mem_raddr_o;     // 地址，读内存�?
         wire[`MemBus] ex_send_mem_rdata_o;
-        //ex中添加fire模块的输出
-        wire ex_fire_start_o;               // 开始fire标志
-        wire ex_fire_mem_req_o;                  // 标志位，访存的
-        wire ex_fire_mem_we_o;                // 内存读写状态
-        wire[`MemAddrBus] ex_fire_mem_raddr_o;     // 地址，读内存的
+        //ex中添加fire模块的输�?
+        wire ex_fire_start_o;               // �?始fire标志
+        wire ex_fire_mem_req_o;                  // 标志位，访存�?
+        wire ex_fire_mem_we_o;                // 内存读写状�??
+        wire[`MemAddrBus] ex_fire_mem_raddr_o;     // 地址，读内存�?
         wire[`MemBus] ex_fire_mem_rdata_o;
 
     // regs模块输出信号
@@ -350,7 +350,7 @@ module tinyriscv(
         .send_mem_req_o(ex_send_mem_req_o),
         .send_mem_we_o(ex_send_mem_we_o),
         .send_mem_raddr_o(ex_send_mem_raddr_o),
-        .send_mem_rdata_o(ex_send_mem_rdata_o)
+        .send_mem_rdata_o(ex_send_mem_rdata_o),
         //fire交互部分 
         .fire_busy_i(fire_busy_o),
         .fire_ready_i(fire_ready_o),
@@ -387,8 +387,8 @@ module tinyriscv(
         .ex_mem_rdata_i(ex_send_mem_rdata_o),
         .ID(send_ID_o),
         .busy_o(send_busy_o),
-        .ready_o(send_ready_o),
-    )
+        .ready_o(send_ready_o)
+    );
 
     //fire模块例化
     fire u_fire(
@@ -400,8 +400,8 @@ module tinyriscv(
         .ex_mem_raddr_i(ex_fire_mem_raddr_o),
         .ex_mem_rdata_i(ex_fire_mem_rdata_o),
         .busy_o(fire_busy_o),
-        .ready_o(fire_ready_o),
-    )
+        .ready_o(fire_ready_o)
+    );
 
     // clint模块例化
     clint u_clint(
