@@ -309,10 +309,10 @@ module ex(
     assign fire_mem_req_o = mem_req_o;
     assign fire_mem_we_o = mem_we_o;
     assign fire_mem_raddr_o = mem_raddr_o;
-    assign fire_mem_rdata_o = mem_rdata_o;
+    assign fire_mem_rdata_o = mem_rdata_i;
     assign fire_start_o = (int_assert_i == `INT_ASSERT)? 0: fire_start;/////////fire+中断
     always @ (*) begin
-        if ((opcode == 7'b0101111) && (funct3 == 3'b010) && (inst_i[31:20]==11'b0) && reg1_rdata >= reg2_rdata) begin //组合逻辑，这个周期内负责传给fire模块start信号，并且产�?+1的pc地址；下�?个周期就进入下面的else
+        if ((opcode == 7'b0101111) && (funct3 == 3'b010) && (inst_i[31:20]==11'b0) && reg1_rdata_i >= reg2_rdata_i) begin //组合逻辑，这个周期内负责传给fire模块start信号，并且产�?+1的pc地址；下�?个周期就进入下面的else
             fire_start = 1;
             fire_jump_flag = `JumpEnable;
             fire_hold_flag = `HoldEnable;
@@ -335,10 +335,10 @@ module ex(
                 fire_start = 1; //�?直保持fire_start的激活状态，关死�?要busy不为0
                 fire_hold_flag = `HoldEnable;
                 fire_req = 1;
-                fire_mem_wdata = reg1_rdata;
+                fire_mem_wdata = reg1_rdata_i;
                 fire_mem_waddr = 32'h3000_000c;
                 fire_mem_raddr = 32'h3000_0000;
-                if (fire_ID_ready_i == 1 ) begin                  
+                if (fire_ready_i == 1 ) begin                  
                     fire_mem_we = `WriteEnable;
                 end 
                 else begin
@@ -359,7 +359,7 @@ module ex(
     assign send_mem_req_o = mem_req_o;
     assign send_mem_we_o = mem_we_o;
     assign send_mem_raddr_o = mem_raddr_o;
-    assign send_mem_rdata_o = mem_rdata_o;
+    assign send_mem_rdata_o = mem_rdata_i;
     assign send_start_o = (int_assert_i == `INT_ASSERT)? 0: send_start;/////////send+中断
     always @ (*) begin
         if ((opcode == 7'b0101111) && (funct3 == 3'b000)) begin //组合逻辑，这个周期内负责传给send模块start信号，并且产�?+1的pc地址；下�?个周期就进入下面的else
@@ -382,7 +382,7 @@ module ex(
                 send_mem_wdata = send_ID_i;
                 send_mem_waddr = 32'h3000_000c;
                 send_mem_raddr = 32'h3000_0004;
-                if (send_ID_ready_i == 1 ) begin                  
+                if (send_ready_i == 1 ) begin                  
                     send_we = `WriteEnable;
                 end 
                 else begin
@@ -411,8 +411,8 @@ module ex(
                 case (funct3)
                     010: begin
                         if(inst_i[31:20]==11'b0) begin
-                            if (reg1_rdata < reg2_rdata) begin
-                                reg_wdata = reg1_rdata;
+                            if (reg1_rdata_i < reg2_rdata_i) begin
+                                reg_wdata = reg1_rdata_i;
                                 reg_we = `WriteEnable;
                                 reg_waddr = reg_waddr_i;
                                 jump_flag = `JumpDisable;
@@ -435,7 +435,7 @@ module ex(
                                 mem_we = `WriteDisable;
                             end
                         end else begin
-                            reg_wdata = reg1_rdata+{{20{inst_i[31]}}, inst_i[31:20]};;
+                            reg_wdata = reg1_rdata_i+{{20{inst_i[31]}}, inst_i[31:20]};
                             reg_we = `WriteEnable;
                             reg_waddr = reg_waddr_i;
                             jump_flag = `JumpDisable;
