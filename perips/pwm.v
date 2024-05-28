@@ -20,15 +20,17 @@ module pwm(
     localparam A_1 = 8'h1;
     localparam A_2 = 8'h2;
     localparam A_3 = 8'h3;
-    localparam B_0 = 8'hA;
-    localparam B_1 = 8'hB;
-    localparam B_2 = 8'hC;
-    localparam B_3 = 8'hD;
+    localparam B_0 = 8'h10;
+    localparam B_1 = 8'h11;
+    localparam B_2 = 8'h12;
+    localparam B_3 = 8'h13;
     localparam C = 8'h4;
 
 
     reg[31:0] a_0,a_1,a_2,a_3,b_0,b_1,b_2,b_3,c;
     reg[31:0] count_0,count_1,count_2,count_3;
+    wire [31:0] m;
+    assign m = 100000;
 
     assign pw_pin0 = pw_reg0;
     assign pw_pin1 = pw_reg1;
@@ -119,13 +121,14 @@ module pwm(
         end
     end
 
-    // 发送脉冲
+    // 发�?�脉�??
 
     always @ (posedge clk) begin
         if (rst == 1'b0) begin
             pw_reg0 <= 0;
+            count_0 <= 0;
         end else begin
-            if (c[0] == 1) begin
+            if (c[0] == 0) begin
                 pw_reg0 <= 0;
             end else begin
                 if (we_i == 1'b1) begin
@@ -161,9 +164,199 @@ module pwm(
                             pw_reg0 <= 1; 
                             count_0 <= 0;
                     end
+                end else begin
+                    if (count_0 < b_0/m) begin
+                        pw_reg0 <= 1;
+                        count_0 <= count_0 + 1;
+                    end else begin
+                        if (count_0 < a_0/m) begin
+                            pw_reg0 <= 0;
+                            count_0 <= count_0 + 1;
+                        end else begin
+                            pw_reg0 <= 1;
+                            count_0 <= 0;
+                        end
+                    end
                 end
             end
         end
     end
 
+    always @ (posedge clk) begin
+        if (rst == 1'b0) begin
+            pw_reg1 <= 0;
+            count_1 <= 0;
+        end else begin
+            if (c[0] == 0) begin
+                pw_reg1 <= 0;
+            end else begin
+                if (we_i == 1'b1) begin
+                    if (count_1 < b_1) begin
+                        if (addr_i[23:16]!=B_1)begin
+                            pw_reg1 <= 1; 
+                            count_1 <= count_1 + 1;
+                        end
+                        else begin
+                            if (count_1 < data_i) begin
+                                pw_reg1 <= 1;
+                                count_1 <= count_1 + 1;
+                            end else begin
+                                pw_reg1 <= 0;
+                                count_1 <= data_i;
+                            end
+                        end
+                    end else if(count_1 < a_1) begin
+                        if (addr_i[23:16]!=a_1)begin
+                            pw_reg1 <= 0; 
+                            count_1 <= count_1 + 1;
+                        end
+                        else begin
+                            if (count_1 < data_i) begin
+                                pw_reg1 <= 0;
+                                count_1 <= count_1 + 1;
+                            end else begin
+                                pw_reg1 <= 1;
+                                count_1 <= 0;
+                            end
+                        end
+                    end else begin
+                            pw_reg1 <= 1; 
+                            count_1 <= 0;
+                    end
+                end else begin
+                    if (count_1 < b_1/m) begin
+                        pw_reg1 <= 1;
+                        count_1 <= count_1 + 1;
+                    end else begin
+                        if (count_1 < a_1/m) begin
+                            pw_reg1 <= 0;
+                            count_1 <= count_1 + 1;
+                        end else begin
+                            pw_reg1 <= 1;
+                            count_1 <= 0;
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    always @ (posedge clk) begin
+        if (rst == 1'b0) begin
+            pw_reg2 <= 0;
+            count_2 <= 0;
+        end else begin
+            if (c[0] == 0) begin
+                pw_reg2 <= 0;
+            end else begin
+                if (we_i == 1'b1) begin
+                    if (count_2 < b_2) begin
+                        if (addr_i[23:16]!=B_2)begin
+                            pw_reg2 <= 1; 
+                            count_2 <= count_2 + 1;
+                        end
+                        else begin
+                            if (count_2 < data_i) begin
+                                pw_reg2 <= 1;
+                                count_2 <= count_2 + 1;
+                            end else begin
+                                pw_reg2 <= 0;
+                                count_2 <= data_i;
+                            end
+                        end
+                    end else if(count_2 < a_2) begin
+                        if (addr_i[23:16]!=a_2)begin
+                            pw_reg2 <= 0; 
+                            count_2 <= count_2 + 1;
+                        end
+                        else begin
+                            if (count_2 < data_i) begin
+                                pw_reg2 <= 0;
+                                count_2 <= count_2 + 1;
+                            end else begin
+                                pw_reg2 <= 1;
+                                count_2 <= 0;
+                            end
+                        end
+                    end else begin
+                            pw_reg2 <= 1; 
+                            count_2 <= 0;
+                    end
+                end else begin
+                    if (count_2 < b_2/m) begin
+                        pw_reg2 <= 1;
+                        count_2 <= count_2 + 1;
+                    end else begin
+                        if (count_2 < a_2/m) begin
+                            pw_reg2 <= 0;
+                            count_2 <= count_2 + 1;
+                        end else begin
+                            pw_reg2 <= 1;
+                            count_2 <= 0;
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    always @ (posedge clk) begin
+        if (rst == 1'b0) begin
+            pw_reg3 <= 0;
+            count_3 <= 0;
+        end else begin
+            if (c[0] == 0) begin
+                pw_reg3 <= 0;
+            end else begin
+                if (we_i == 1'b1) begin
+                    if (count_3 < b_3) begin
+                        if (addr_i[23:16]!=B_3)begin
+                            pw_reg3 <= 1; 
+                            count_3 <= count_3 + 1;
+                        end
+                        else begin
+                            if (count_3 < data_i) begin
+                                pw_reg3 <= 1;
+                                count_3 <= count_3 + 1;
+                            end else begin
+                                pw_reg3 <= 0;
+                                count_3 <= data_i;
+                            end
+                        end
+                    end else if(count_3 < a_3) begin
+                        if (addr_i[23:16]!=a_3)begin
+                            pw_reg3 <= 0; 
+                            count_3 <= count_3 + 1;
+                        end
+                        else begin
+                            if (count_3 < data_i) begin
+                                pw_reg3 <= 0;
+                                count_3 <= count_3 + 1;
+                            end else begin
+                                pw_reg3 <= 1;
+                                count_3 <= 0;
+                            end
+                        end
+                    end else begin
+                            pw_reg3 <= 1; 
+                            count_3 <= 0;
+                    end
+                end else begin
+                    if (count_3 < b_3/m) begin
+                        pw_reg3 <= 1;
+                        count_3 <= count_3 + 1;
+                    end else begin
+                        if (count_3 < a_3/m) begin
+                            pw_reg3 <= 0;
+                            count_3 <= count_3 + 1;
+                        end else begin
+                            pw_reg3 <= 1;
+                            count_3 <= 0;
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
 endmodule
