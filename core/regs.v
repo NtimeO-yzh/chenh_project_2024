@@ -53,7 +53,9 @@ module regs(
 
     // 写寄存器
     always @ (posedge clk) begin
-        if (rst == `RstDisable) begin
+        if (rst == `RstEnable) begin
+            regs[27] <= `ZeroWord;
+        end else begin
             // 优先ex模块写操作
             if ((we_i == `WriteEnable) && (waddr_i != `ZeroReg)) begin
                 regs[waddr_i] <= wdata_i;
