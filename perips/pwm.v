@@ -29,8 +29,6 @@ module pwm(
 
     reg[31:0] a_0,a_1,a_2,a_3,b_0,b_1,b_2,b_3,c;
     reg[31:0] count_0,count_1,count_2,count_3;
-    wire [31:0] m;
-    assign m = 100000;
 
     assign pw_pin0 = pw_reg0;
     assign pw_pin1 = pw_reg1;
@@ -165,11 +163,11 @@ module pwm(
                             count_0 <= 0;
                     end
                 end else begin
-                    if (count_0 < b_0/m) begin
+                    if (count_0 < b_0) begin
                         pw_reg0 <= 1;
                         count_0 <= count_0 + 1;
                     end else begin
-                        if (count_0 < a_0/m) begin
+                        if (count_0 < a_0) begin
                             pw_reg0 <= 0;
                             count_0 <= count_0 + 1;
                         end else begin
@@ -224,11 +222,11 @@ module pwm(
                             count_1 <= 0;
                     end
                 end else begin
-                    if (count_1 < b_1/m) begin
+                    if (count_1 < b_1) begin
                         pw_reg1 <= 1;
                         count_1 <= count_1 + 1;
                     end else begin
-                        if (count_1 < a_1/m) begin
+                        if (count_1 < a_1) begin
                             pw_reg1 <= 0;
                             count_1 <= count_1 + 1;
                         end else begin
@@ -283,11 +281,11 @@ module pwm(
                             count_2 <= 0;
                     end
                 end else begin
-                    if (count_2 < b_2/m) begin
+                    if (count_2 < b_2) begin
                         pw_reg2 <= 1;
                         count_2 <= count_2 + 1;
                     end else begin
-                        if (count_2 < a_2/m) begin
+                        if (count_2 < a_2) begin
                             pw_reg2 <= 0;
                             count_2 <= count_2 + 1;
                         end else begin
@@ -342,11 +340,11 @@ module pwm(
                             count_3 <= 0;
                     end
                 end else begin
-                    if (count_3 < b_3/m) begin
+                    if (count_3 < b_3) begin
                         pw_reg3 <= 1;
                         count_3 <= count_3 + 1;
                     end else begin
-                        if (count_3 < a_3/m) begin
+                        if (count_3 < a_3) begin
                             pw_reg3 <= 0;
                             count_3 <= count_3 + 1;
                         end else begin

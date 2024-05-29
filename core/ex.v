@@ -17,7 +17,7 @@
 `include "defines.v"
 
 // 执行模块
-// 纯组合�?�辑电路
+// 纯组合�?�辑电路
 module ex(
 
     input wire rst,
@@ -25,13 +25,13 @@ module ex(
     // from id
     input wire[`InstBus] inst_i,            // 指令内容
     input wire[`InstAddrBus] inst_addr_i,   // 指令地址
-    input wire reg_we_i,                    // 是否写�?�用寄存�?
-    input wire[`RegAddrBus] reg_waddr_i,    // 写�?�用寄存器地�?
-    input wire[`RegBus] reg1_rdata_i,       // 通用寄存�?1输入数据
-    input wire[`RegBus] reg2_rdata_i,       // 通用寄存�?2输入数据
-    input wire csr_we_i,                    // 是否写CSR寄存�?
-    input wire[`MemAddrBus] csr_waddr_i,    // 写CSR寄存器地�?
-    input wire[`RegBus] csr_rdata_i,        // CSR寄存器输入数�?
+    input wire reg_we_i,                    // 是否写�?�用寄存�?
+    input wire[`RegAddrBus] reg_waddr_i,    // 写�?�用寄存器地�?
+    input wire[`RegBus] reg1_rdata_i,       // 通用寄存�?1输入数据
+    input wire[`RegBus] reg2_rdata_i,       // 通用寄存�?2输入数据
+    input wire csr_we_i,                    // 是否写CSR寄存�?
+    input wire[`MemAddrBus] csr_waddr_i,    // 写CSR寄存器地�?
+    input wire[`RegBus] csr_rdata_i,        // CSR寄存器输入数�?
     input wire int_assert_i,                // 中断发生标志
     input wire[`InstAddrBus] int_addr_i,    // 中断跳转地址
     input wire[`MemAddrBus] op1_i,
@@ -45,56 +45,56 @@ module ex(
     // from div
     input wire div_ready_i,                 // 除法运算完成标志
     input wire[`RegBus] div_result_i,       // 除法运算结果
-    input wire div_busy_i,                  // 除法运算忙标�?
-    input wire[`RegAddrBus] div_reg_waddr_i,// 除法运算结束后要写的寄存器地�?
+    input wire div_busy_i,                  // 除法运算忙标�?
+    input wire[`RegAddrBus] div_reg_waddr_i,// 除法运算结束后要写的寄存器地�?
     // from fire
     input wire[`MemBus] fire_i,
-    input wire fire_busy_i,               //fire运算忙标�?
+    input wire fire_busy_i,               //fire运算忙标�?
     input wire fire_ready_i,             //fire改变的we信号，控制是写还是读
 
     // from send
-    input wire[31:0] send_ID_i,        //send发�?�的数据
-    input wire send_busy_i,               //send运算忙标�?
+    input wire[31:0] send_ID_i,        //send发�?�的数据
+    input wire send_busy_i,               //send运算忙标�?
     input wire send_ready_i,             //send改变的we信号，控制是写还是读
 
     // to mem
-    output [`MemBus] mem_wdata_o,        // 写内存数�?
-    output [`MemAddrBus] mem_raddr_o,    // 读内存地�?
-    output [`MemAddrBus] mem_waddr_o,    // 写内存地�?
+    output [`MemBus] mem_wdata_o,        // 写内存数�?
+    output [`MemAddrBus] mem_raddr_o,    // 读内存地�?
+    output [`MemAddrBus] mem_waddr_o,    // 写内存地�?
     output wire mem_we_o,                   // 是否要写内存
     output wire mem_req_o,                  // 请求访问内存标志
 
     // to regs
     output wire[`RegBus] reg_wdata_o,       // 写寄存器数据
-    output wire reg_we_o,                   // 是否要写通用寄存�?
-    output wire[`RegAddrBus] reg_waddr_o,   // 写�?�用寄存器地�?
+    output wire reg_we_o,                   // 是否要写通用寄存�?
+    output wire[`RegAddrBus] reg_waddr_o,   // 写�?�用寄存器地�?
 
     // to csr reg
-    output reg[`RegBus] csr_wdata_o,        // 写CSR寄存器数�?
-    output wire csr_we_o,                   // 是否要写CSR寄存�?
-    output wire[`MemAddrBus] csr_waddr_o,   // 写CSR寄存器地�?
+    output reg[`RegBus] csr_wdata_o,        // 写CSR寄存器数�?
+    output wire csr_we_o,                   // 是否要写CSR寄存�?
+    output wire[`MemAddrBus] csr_waddr_o,   // 写CSR寄存器地�?
 
     // to div
-    output wire div_start_o,                // �?始除法运算标�?
-    output reg[`RegBus] div_dividend_o,     // 被除�?
+    output wire div_start_o,                // �?始除法运算标�?
+    output reg[`RegBus] div_dividend_o,     // 被除�?
     output reg[`RegBus] div_divisor_o,      // 除数
-    output reg[2:0] div_op_o,               // 具体是哪�?条除法指�?
-    output reg[`RegAddrBus] div_reg_waddr_o,// 除法运算结束后要写的寄存器地�?
+    output reg[2:0] div_op_o,               // 具体是哪�?条除法指�?
+    output reg[`RegAddrBus] div_reg_waddr_o,// 除法运算结束后要写的寄存器地�?
 
     // to fire
 
-    output wire fire_start_o,                // �?始fire标志
-    output wire fire_mem_req_o,                   // 标志位，访存�?
-    output wire fire_mem_we_o,                // 内存读写状�??
-    output wire[`MemAddrBus] fire_mem_raddr_o,     // 地址，读内存�?
+    output wire fire_start_o,                // �?始fire标志
+    output wire fire_mem_req_o,                   // 标志位，访存�?
+    output wire fire_mem_we_o,                // 内存读写状�??
+    output wire[`MemAddrBus] fire_mem_raddr_o,     // 地址，读内存�?
     output wire[`MemBus] fire_mem_rdata_o,      //数据，读取内存的
     output wire[`RegBus] fire_mem_wdata_o,
 
     // to send
-    output wire send_start_o,                // �?始send标志
-    output wire send_mem_req_o,                   // 标志位，访存�?
-    output wire send_mem_we_o,                // 内存读写状�??
-    output wire[`MemAddrBus] send_mem_raddr_o,     // 地址，读内存�?
+    output wire send_start_o,                // �?始send标志
+    output wire send_mem_req_o,                   // 标志位，访存�?
+    output wire send_mem_we_o,                // 内存读写状�??
+    output wire[`MemAddrBus] send_mem_raddr_o,     // 地址，读内存地址
     output wire[`MemBus] send_mem_rdata_o,      //数据，读取内存的
 
     // to ctrl
@@ -206,28 +206,28 @@ module ex(
     
 
     assign reg_wdata_o = reg_wdata | div_wdata |fire_reg_wdata;
-    // 响应中断时不写�?�用寄存�?
+    // 响应中断时不写�?�用寄存�?
     assign reg_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (reg_we || div_we || fire_reg_we);
     assign reg_waddr_o = reg_waddr | div_waddr |fire_reg_waddr;
 
-    // 响应中断时不写内�?
+    // 响应中断时不写内�?
     assign mem_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (mem_we || send_we || fire_mem_we);
 
-    // 响应中断时不向�?�线请求访问内存
+    // 响应中断时不向�?�线请求访问内存
     assign mem_req_o = (int_assert_i == `INT_ASSERT)? `RIB_NREQ: (mem_req || send_req || fire_req);
 
-    //写往内存的地�?
+    //写往内存的地�?
     assign mem_waddr_o = mem_waddr|send_mem_waddr|fire_mem_waddr;
-    //从内存读的地�?
+    //从内存读的地�?
     assign mem_raddr_o = mem_raddr|send_mem_raddr|fire_mem_raddr;
-    //写往内存的数�?
+    //写往内存的数�?
     assign mem_wdata_o = mem_wdata|send_mem_wdata|fire_mem_wdata;
-    //hold方法以及jump，并且处理和中断的关�?
-    assign hold_flag_o = hold_flag || div_hold_flag || send_hold_flag||fire_hold_flag;/////////或�?�send中断
-    assign jump_flag_o = jump_flag || div_jump_flag || send_jump_flag ||fire_jump_flag||((int_assert_i == `INT_ASSERT)? `JumpEnable: `JumpDisable);/////////或�?�send跳转
-    assign jump_addr_o = (int_assert_i == `INT_ASSERT)? int_addr_i: (jump_addr | div_jump_addr | send_jump_addr|fire_jump_addr);////或�?�跳转到�?个地�?，send
+    //hold方法以及jump，并且处理和中断的关�?
+    assign hold_flag_o = hold_flag || div_hold_flag || send_hold_flag||fire_hold_flag;/////////或�?�send中断
+    assign jump_flag_o = jump_flag || div_jump_flag || send_jump_flag ||fire_jump_flag||((int_assert_i == `INT_ASSERT)? `JumpEnable: `JumpDisable);/////////或�?�send跳转
+    assign jump_addr_o = (int_assert_i == `INT_ASSERT)? int_addr_i: (jump_addr | div_jump_addr | send_jump_addr|fire_jump_addr);////或�?�跳转到�?个地�?，send
 
-    // 响应中断时不写CSR寄存�?
+    // 响应中断时不写CSR寄存�?
     assign csr_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: csr_we_i;
     assign csr_waddr_o = csr_waddr_i;
 
@@ -316,7 +316,7 @@ module ex(
     assign fire_mem_wdata_o = fire_mem_wdata;
     assign fire_start_o = (int_assert_i == `INT_ASSERT)? 0: fire_start;/////////fire+中断
     always @ (*) begin
-        if ((opcode == 7'b0101111) && (funct3 == 3'b010) && (inst_i[31:20]==11'b0) && reg1_rdata_i >= reg2_rdata_i) begin //组合逻辑，这个周期内负责传给fire模块start信号，并且产�?+1的pc地址；下�?个周期就进入下面的else
+        if ((opcode == 7'b0101111) && (funct3 == 3'b010) && (inst_i[31:20]==11'b0) && reg1_rdata_i >= reg2_rdata_i) begin //组合逻辑，这个周期内负责传给fire模块start信号，并且产�?+1的pc地址；下�?个周期就进入下面的else
             fire_start = 1;
             fire_jump_flag = `JumpEnable;
             fire_hold_flag = `HoldEnable;
@@ -330,12 +330,12 @@ module ex(
             fire_reg_waddr = reg_waddr_i;
         end else begin
             fire_jump_flag = `JumpDisable;
-            fire_jump_addr = `ZeroWord; //?????????这个不应该是保持之前的PC吗，还是说下面有别的操作会给�?个赋值，使得�?以下面会有一个是否hold（√�?
+            fire_jump_addr = `ZeroWord; //?????????这个不应该是保持之前的PC吗，还是说下面有别的操作会给�?个赋值，使得�?以下面会有一个是否hold（√�?
             fire_reg_wdata = `ZeroWord;
             fire_reg_we = `WriteDisable;
             fire_reg_waddr = reg_waddr_i;
             if (fire_busy_i == `True) begin
-                fire_start = 1; //�?直保持fire_start的激活状态，关死�?要busy不为0
+                fire_start = 1; //�?直保持fire_start的激活状态，关死�?要busy不为0
                 fire_hold_flag = `HoldEnable;
                 fire_req = 1;
                 fire_mem_wdata = fire_i;
@@ -365,21 +365,21 @@ module ex(
     assign send_mem_rdata_o = mem_rdata_i;
     assign send_start_o = (int_assert_i == `INT_ASSERT)? 0: send_start;/////////send+中断
     always @ (*) begin
-        if ((opcode == 7'b0101111) && (funct3 == 3'b000)) begin //组合逻辑，这个周期内负责传给send模块start信号，并且产�?+1的pc地址；下�?个周期就进入下面的else
+        if ((opcode == 7'b0101111) && (funct3 == 3'b000)) begin //组合逻辑，这个周期内负责传给send模块start信号，并且产�?+1的pc地址；下�?个周期就进入下面的else
             send_start = 1;
             send_jump_flag = `JumpEnable;
             send_hold_flag = `HoldEnable;
             send_jump_addr = op1_jump_add_op2_jump_res;
-            send_mem_wdata = `ZeroWord;//没有和regdata�?样使�? || 的形式， 有可能会�?个周期内满足多个memdata就出错了�? 只能做�?�辑上的保证，否则就会赋值两次， 而不是�?�的错误
+            send_mem_wdata = `ZeroWord;//没有和regdata�?样使�? || 的形式， 有可能会�?个周期内满足多个memdata就出错了�? 只能做�?�辑上的保证，否则就会赋值两次， 而不是�?�的错误
             send_mem_raddr = 32'h3000_0004;
             send_mem_wdata = `ZeroWord;
             send_we = `WriteDisable;
             send_req = 1;
         end else begin
             send_jump_flag = `JumpDisable;
-            send_jump_addr = `ZeroWord; //?????????这个不应该是保持之前的PC吗，还是说下面有别的操作会给�?个赋值，使得�?以下面会有一个是否hold（√�?
+            send_jump_addr = `ZeroWord; //?????????这个不应该是保持之前的PC吗，还是说下面有别的操作会给�?个赋值，使得�?以下面会有一个是否hold（√�?
             if (send_busy_i == `True) begin
-                send_start = 1; //�?直保持send_start的激活状态，关死�?要busy不为0
+                send_start = 1; //�?直保持send_start的激活状态，关死�?要busy不为0
                 send_hold_flag = `HoldEnable;
                 send_req = 1;
                 send_mem_wdata = send_ID_i;

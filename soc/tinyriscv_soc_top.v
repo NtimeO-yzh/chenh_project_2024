@@ -29,9 +29,9 @@ module tinyriscv_soc_top(
 
     input wire uart_debug_pin, // 串口下载使能引脚
 
-    output wire uart_tx_pin, // UART发�?�引�?
-    output wire pwm_pin0,pwm_pin1,pwm_pin2,pwm_pin3,
+    output wire uart_tx_pin, // UART发�?�引�?
     input wire uart_rx_pin,  // UART接收引脚
+    output wire [3:0]PWM_o,
     inout wire[15:0] gpio,    // GPIO引脚
 
     input wire jtag_TCK,     // JTAG TCK引脚
@@ -231,10 +231,10 @@ module tinyriscv_soc_top(
         .addr_i(s6_addr_o),
         .data_i(s6_data_o),
         .data_o(s6_data_i),
-        .pw_pin0(pw_pin0),
-        .pw_pin1(pw_pin1),
-        .pw_pin2(pw_pin2),
-        .pw_pin3(pw_pin3)
+        .pw_pin0(PWM_o[0]),
+        .pw_pin1(PWM_o[1]),
+        .pw_pin2(PWM_o[2]),
+        .pw_pin3(PWM_o[3])
 
     );
 
