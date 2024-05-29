@@ -24,7 +24,7 @@ set_property PACKAGE_PIN E16 [get_ports halted_ind]
 # Debug 引脚
 set_property IOSTANDARD LVCMOS33 [get_ports uart_debug_pin]
 set_property PACKAGE_PIN M13 [get_ports uart_debug_pin]
-# 串口发送引脚
+# 串口发�?�引�?
 set_property IOSTANDARD LVCMOS33 [get_ports uart_tx_pin]
 set_property PACKAGE_PIN G16 [get_ports uart_tx_pin]
 
@@ -41,6 +41,9 @@ set_property PACKAGE_PIN D20 [get_ports PWM_o[1]]
 
 set_property IOSTANDARD LVCMOS33 [get_ports PWM_o[2]]
 set_property PACKAGE_PIN C20 [get_ports PWM_o[2]]
+
+set_property IOSTANDARD LVCMOS33 [get_ports PWM_o[3]]
+set_property PACKAGE_PIN E19 [get_ports PWM_o[3]]
 
 # GPIO引脚
 set_property IOSTANDARD LVCMOS33 [get_ports {gpio[*]}]
@@ -62,20 +65,20 @@ set_property PACKAGE_PIN B20 [get_ports {gpio[14]}]
 set_property PACKAGE_PIN D17 [get_ports {gpio[15]}]
 
 # jtag_TCK 引脚
-set_property IOSTANDARD LVCMOS33 [get_ports jtag_TCK]
-set_property PACKAGE_PIN F14 [get_ports jtag_TCK]
+#set_property IOSTANDARD LVCMOS33 [get_ports jtag_TCK]
+#set_property PACKAGE_PIN F14 [get_ports jtag_TCK]
 
 # jtag_TMS引脚
-set_property IOSTANDARD LVCMOS33 [get_ports jtag_TMS]
-set_property PACKAGE_PIN F13 [get_ports jtag_TMS]
+#set_property IOSTANDARD LVCMOS33 [get_ports jtag_TMS]
+#set_property PACKAGE_PIN F13 [get_ports jtag_TMS]
 
 # jtag_TDI
-set_property IOSTANDARD LVCMOS33 [get_ports jtag_TDI]
-set_property PACKAGE_PIN E14 [get_ports jtag_TDI]
+#set_property IOSTANDARD LVCMOS33 [get_ports jtag_TDI]
+#set_property PACKAGE_PIN E14 [get_ports jtag_TDI]
 
 # jtag_TDO
-set_property IOSTANDARD LVCMOS33 [get_ports jtag_TDO]
-set_property PACKAGE_PIN E13 [get_ports jtag_TDO]
+#set_property IOSTANDARD LVCMOS33 [get_ports jtag_TDO]
+#set_property PACKAGE_PIN E13 [get_ports jtag_TDO]
 
 # spi_miso
 set_property IOSTANDARD LVCMOS33 [get_ports spi_miso]
