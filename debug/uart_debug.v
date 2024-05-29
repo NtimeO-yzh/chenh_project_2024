@@ -15,10 +15,10 @@
  */
 
 
-// clk = 50MHz时对应的波特率分频系数
+// clk = 50MHz时对应的波特率分频系�?
 `define UART_BAUD_115200        32'h1B8
 
-// 串口寄存器地址
+// 串口寄存器地�?
 `define UART_CTRL_REG           32'h30000000
 `define UART_STATUS_REG         32'h30000004
 `define UART_BAUD_REG           32'h30000008
@@ -28,10 +28,10 @@
 `define UART_TX_BUSY_FLAG       32'h1
 `define UART_RX_OVER_FLAG       32'h2
 
-// 第一个包的大小
-`define UART_FIRST_PACKET_LEN   8'd131
+// 第一个包的大�?
+`define UART_FIRST_PACKET_LEN   8'd35
 // 其他包的大小(每次烧写的字节数)
-`define UART_REMAIN_PACKET_LEN  8'd131
+`define UART_REMAIN_PACKET_LEN  8'd35
 
 `define UART_RESP_ACK           32'h6
 `define UART_RESP_NAK           32'h15
@@ -57,7 +57,7 @@ module uart_debug(
     );
 
 
-    // 状态
+    // 状�??
     localparam S_IDLE                    = 14'h0001;
     localparam S_INIT_UART_BAUD          = 14'h0002;
     localparam S_CLEAR_UART_RX_OVER_FLAG = 14'h0004;
@@ -76,7 +76,7 @@ module uart_debug(
     reg[13:0] state;
 
     // 存放串口接收到的数据
-    reg[7:0] rx_data[0:131];
+    reg[7:0] rx_data[0:34];
     reg[7:0] rec_bytes_index;
     reg[7:0] need_to_rec_bytes;
     reg[15:0] remain_packet_count;
@@ -93,7 +93,7 @@ module uart_debug(
     reg[7:0] crc_byte_index;
 
 
-    // 向总线请求信号
+    // 向�?�线请求信号
     assign req_o = (rst == 1'b1 && debug_en_i == 1'b1)? 1'b1: 1'b0;
 
 
@@ -169,7 +169,7 @@ module uart_debug(
                 S_CRC_END: begin
                     if (crc_result == {rx_data[need_to_rec_bytes - 1], rx_data[need_to_rec_bytes - 2]}) begin
                         if (need_to_rec_bytes == `UART_FIRST_PACKET_LEN && remain_packet_count == 16'h0) begin
-                            remain_packet_count <= {7'h0, fw_file_size[31:7]} + 1'b1;
+                            remain_packet_count <= {5'h0, fw_file_size[31:5]} + 1'b1;
                             state <= S_SEND_ACK;
                         end else begin
                             remain_packet_count <= remain_packet_count - 1'b1;
@@ -228,7 +228,7 @@ module uart_debug(
         end
     end
 
-    // 读接收到的串口数据
+    // 读接收到的串口数�?
     always @ (posedge clk) begin
         if (rst == 1'b0 || debug_en_i == 1'b0) begin
             rec_bytes_index <= 8'h0;
@@ -255,7 +255,7 @@ module uart_debug(
         end else begin
             case (state)
                 S_CRC_START: begin
-                    fw_file_size <= {rx_data[61], rx_data[62], rx_data[63], rx_data[64]};
+                    fw_file_size <= {rx_data[25], rx_data[26], rx_data[27], rx_data[28]};
                 end
             endcase
         end
