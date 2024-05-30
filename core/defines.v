@@ -16,6 +16,8 @@
 
 `define CpuResetAddr 32'h0
 
+
+
 `define RstEnable 1'b0
 `define RstDisable 1'b1
 `define ZeroWord 32'h0
@@ -162,3 +164,9 @@
 `define RegWidth 32
 `define RegNum 32        // reg num
 `define RegNumLog2 5
+
+//iic
+`define     SCL_POS          (cnt==3'd0)      
+`define     SCL_HIG          (cnt==3'd1)
+`define     SCL_NEG          (cnt==3'd2)     
+`define     SCL_LOW          (cnt==3'd3)  

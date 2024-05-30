@@ -115,11 +115,14 @@ module pwm(
                 C: begin
                     data_o = c;
                 end
+                default: begin
+                     data_o = 32'h0;
+                end
             endcase
         end
     end
 
-    // 发�?�脉�??
+    // 发�?�脉�??
 
     always @ (posedge clk) begin
         if (rst == 1'b0) begin
