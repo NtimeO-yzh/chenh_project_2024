@@ -48,6 +48,8 @@ assign sda= sda_link ?sda_reg:1'bz;
     localparam Islave_addr = 8'h1;
     localparam Idata_o = 8'h2;
     localparam Idata_i = 8'h3;
+    localparam Iic_status = 8'h4;
+    reg [31:0] iic_status; 
     reg[31:0] islave_addr,idata_o,idata_i;
     reg[2:0]                      cnt;  
     reg[7:0]                      cnt_delay;    
@@ -81,6 +83,9 @@ assign sda= sda_link ?sda_reg:1'bz;
             case (addr_i[23:16])
                 Idata_o: begin
                     idata_o[15:0] = data_reg;
+                end
+                Iic_status: begin
+                    idata_o = iic_status;
                 end
                 default: begin
                     idata_o = 32'h0;
@@ -129,6 +134,7 @@ if(rst) begin
         sda_reg<=1'b1;
         ptr_write<=idata_i[8];   
         count2<=25'd0;
+        iic_status <= 32'b0;
     end
 
 else begin
@@ -136,6 +142,7 @@ else begin
         case (state)
         idle: 
         begin
+            iic_status[0] <= 0;
             sda_link<=1;    
             sda_reg<=1;     
             if (count2==25'd4_999) begin
@@ -348,6 +355,7 @@ else begin
         end
     //-----------------------------------------------------------------------------------------------------------------
         stop: begin
+            iic_status[0] <= 1;
             if(count1==9'd49) begin    
                 sda_reg<=1'b1;
                 state<=idle;
