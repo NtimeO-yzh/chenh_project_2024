@@ -58,11 +58,13 @@ assign sda= sda_link ?sda_reg:1'bz;
     always @ (posedge clk) begin
         if (rst == 1'b0) begin
             idata_i <= 32'h0;
+            islave_addr<= 32'h0;
         end else begin
             if (we_i == 1'b1) begin
                 case (addr_i[23:16])
                     Idata_i: begin
                         idata_i <= data_i;
+                        islave_addr[6:0] <= data_i[7:1];
                     end
                     Islave_addr: begin
                         islave_addr <= data_i;
@@ -134,7 +136,7 @@ if(rst) begin
         sda_reg<=1'b1;
         ptr_write<=idata_i[8];   
         count2<=25'd0;
-        iic_status <= 32'b0;
+        iic_status <= 32'b1;
     end
 
 else begin
@@ -142,7 +144,7 @@ else begin
         case (state)
         idle: 
         begin
-            iic_status[0] <= 0;
+            iic_status[0] <= 1;
             sda_link<=1;    
             sda_reg<=1;     
             if (count2==25'd4_999) begin
@@ -355,7 +357,7 @@ else begin
         end
     //-----------------------------------------------------------------------------------------------------------------
         stop: begin
-            iic_status[0] <= 1;
+            iic_status[0] <= 0;
             if(count1==9'd49) begin    
                 sda_reg<=1'b1;
                 state<=idle;

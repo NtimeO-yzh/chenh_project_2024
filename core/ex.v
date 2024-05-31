@@ -52,6 +52,18 @@ module ex(
     input wire fire_busy_i,               //fire运算忙标�?
     input wire fire_ready_i,             //fire改变的we信号，控制是写还是读
 
+    // from temp
+    input wire temp_busy_i,
+    input wire[`RegAddrBus] temp_reg_waddr_i,
+    input wire temp_ready_i,             //temp改变的we信号，控制是写还是读
+    // to temp
+    output wire temp_start_o,                // �?始temp标志
+    output wire temp_mem_req_o,                   // 标志位，访存�?
+    output wire temp_mem_we_o,                // 内存读写状�??
+    output wire[`MemAddrBus] temp_mem_raddr_o,     // 地址，读内存�?
+    output wire[`MemBus] temp_mem_rdata_o,      //数据，读取内存的
+    output [`RegAddrBus] temp_reg_waddr_o,
+
     // from send
     input wire[31:0] send_ID_i,        //send发�?�的数据
     input wire send_busy_i,               //send运算忙标�?
@@ -148,6 +160,19 @@ module ex(
     reg[`MemBus] fire_mem_wdata;
     reg[`RegBus] fire_reg_wdata;
     reg[`RegAddrBus] fire_reg_waddr;
+        //temp相关中间reg
+        reg temp_start;
+        reg temp_mem_we;
+        reg temp_mem_req;
+        reg temp_hold_flag;
+        reg temp_jump_flag;
+        reg temp_reg_we;
+        reg[`InstAddrBus] temp_jump_addr;
+        reg[`MemAddrBus] temp_mem_waddr;
+        reg[`MemAddrBus] temp_mem_raddr;
+        reg[`MemBus] temp_mem_wdata;
+        reg[`RegBus] temp_reg_wdata;
+        reg[`RegAddrBus] temp_reg_waddr;
     //send相关中间reg
     reg send_start;
     reg send_we;
@@ -207,25 +232,26 @@ module ex(
 
     assign reg_wdata_o = reg_wdata | div_wdata |fire_reg_wdata;
     // 响应中断时不写�?�用寄存�?
-    assign reg_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (reg_we || div_we || fire_reg_we);
-    assign reg_waddr_o = reg_waddr | div_waddr |fire_reg_waddr;
+    assign reg_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (reg_we || div_we || fire_reg_we|| temp_reg_we );//
+    
+    assign reg_waddr_o = reg_waddr | div_waddr |fire_reg_waddr|temp_reg_waddr;
 
     // 响应中断时不写内�?
-    assign mem_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (mem_we || send_we || fire_mem_we);
+    assign mem_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (mem_we || send_we || fire_mem_we|| temp_mem_we);// 
 
     // 响应中断时不向�?�线请求访问内存
-    assign mem_req_o = (int_assert_i == `INT_ASSERT)? `RIB_NREQ: (mem_req || send_req || fire_req);
+    assign mem_req_o = (int_assert_i == `INT_ASSERT)? `RIB_NREQ: (mem_req || send_req || fire_req|| temp_mem_req );//
 
     //写往内存的地�?
-    assign mem_waddr_o = mem_waddr|send_mem_waddr|fire_mem_waddr;
+    assign mem_waddr_o = mem_waddr|send_mem_waddr|fire_mem_waddr|temp_mem_waddr;//
     //从内存读的地�?
-    assign mem_raddr_o = mem_raddr|send_mem_raddr|fire_mem_raddr;
+    assign mem_raddr_o = mem_raddr|send_mem_raddr|fire_mem_raddr|temp_mem_raddr;//
     //写往内存的数�?
-    assign mem_wdata_o = mem_wdata|send_mem_wdata|fire_mem_wdata;
+    assign mem_wdata_o = mem_wdata|send_mem_wdata|fire_mem_wdata|temp_mem_wdata;//
     //hold方法以及jump，并且处理和中断的关�?
-    assign hold_flag_o = hold_flag || div_hold_flag || send_hold_flag||fire_hold_flag;/////////或�?�send中断
-    assign jump_flag_o = jump_flag || div_jump_flag || send_jump_flag ||fire_jump_flag||((int_assert_i == `INT_ASSERT)? `JumpEnable: `JumpDisable);/////////或�?�send跳转
-    assign jump_addr_o = (int_assert_i == `INT_ASSERT)? int_addr_i: (jump_addr | div_jump_addr | send_jump_addr|fire_jump_addr);////或�?�跳转到�?个地�?，send
+    assign hold_flag_o = hold_flag || div_hold_flag || send_hold_flag||fire_hold_flag||temp_hold_flag;//
+    assign jump_flag_o = jump_flag || div_jump_flag || send_jump_flag ||fire_jump_flag||temp_jump_flag||((int_assert_i == `INT_ASSERT)? `JumpEnable: `JumpDisable);//
+    assign jump_addr_o = (int_assert_i == `INT_ASSERT)? int_addr_i: (jump_addr | div_jump_addr | send_jump_addr|fire_jump_addr|temp_jump_addr);//
 
     // 响应中断时不写CSR寄存�?
     assign csr_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: csr_we_i;
@@ -307,7 +333,60 @@ module ex(
             end
         end
     end
+    //读取温度
+    assign temp_start_o =  (int_assert_i == `INT_ASSERT)? 0: temp_start;//zzzzzzzzzzzzzzzzz
+    assign temp_mem_req_o = mem_req_o;//zzzzzzzzzzzzzzzzz
+    assign temp_mem_we_o = mem_we_o;//zzzzzzzzzzzzzzzzz
+    assign temp_mem_raddr_o = mem_raddr_o;//zzzzzzzzzzzzzzzzz
+    assign temp_mem_rdata_o = mem_rdata_i;//zzzzzzzzzzzzzzzzz
+    assign temp_reg_waddr_o = reg_waddr_o;//zzzzzzzzzzzzzzzzz
 
+    always @ (*) begin
+        if ((opcode == 7'b0101111) && (funct3 == 3'b001)) begin //组合逻辑，这个周期内负责传给send模块start信号，并且产�?+1的pc地址；下�?个周期就进入下面的else
+            temp_start = 1;//zzzzzzzzzzzzzzzzz
+            temp_jump_flag = `JumpEnable;//zzzzzzzzzzzzzzzzz
+            temp_hold_flag = `HoldEnable;//zzzzzzzzzzzzzzzzz
+            temp_jump_addr = op1_jump_add_op2_jump_res;//zzzzzzzzzzzzzzzzz
+            temp_mem_req = 1;//zzzzzzzzzzzzzzzzz
+            temp_mem_we = `WriteEnable;//zzzzzzzzzzzzzzzzz
+            temp_mem_raddr = `ZeroWord;//zzzzzzzzzzzzzzzzz
+            temp_mem_waddr = 32'h7003_0000;//zzzzzzzzzzzzzzzzz
+            temp_mem_wdata = 32'h2000_0091;//zzzzzzzzzzzzzzzzz
+            temp_reg_we = `WriteDisable;//zzzzzzzzzzzzzzzzz
+            temp_reg_wdata = 32'b0;//zzzzzzzzzzzzzzzzz
+            temp_reg_waddr = reg_waddr_i;//zzzzzzzzzzzzzzzzz
+        end else begin
+            temp_jump_flag = `JumpDisable;//zzzzzzzzzzzzzzzzz
+            temp_jump_addr = `ZeroWord; //zzzzzzzzzzzzzzzzz
+            temp_mem_waddr = `ZeroWord;//zzzzzzzzzzzzzzzzz
+            temp_mem_wdata = `ZeroWord;//zzzzzzzzzzzzzzzzz
+            temp_mem_we = `WriteDisable;//zzzzzzzzzzzzzzzzz
+            if (temp_busy_i == 1) begin   
+                temp_start = 1;//zzzzzzzzzzzzzzzzz
+                temp_hold_flag = `HoldEnable;//zzzzzzzzzzzzzzzzz
+                temp_mem_req = 1;//zzzzzzzzzzzzzzzzz
+                temp_reg_we = `WriteDisable;//zzzzzzzzzzzzzzzzz
+                if (temp_ready_i == 1) begin 
+                    temp_reg_waddr = temp_reg_waddr_i;
+                    temp_mem_raddr = 32'h7002_0000;//zzzzzzzzzzzzzzzzz
+                    temp_reg_wdata = {24'b0,mem_rdata_i[14:7]}; 
+                end else begin
+                    temp_reg_waddr = `ZeroWord;
+                    temp_reg_wdata = `ZeroWord;
+                    temp_mem_raddr = 32'h7004_0000;//zzzzzzzzzzzzzzzzz
+                end
+            end 
+            else begin
+                temp_start = 0;
+                temp_hold_flag = `HoldDisable;
+                temp_mem_raddr = `ZeroWord;               
+                temp_reg_we = `WriteDisable;
+                temp_reg_waddr = `ZeroWord;
+                temp_reg_wdata = `ZeroWord;
+                temp_mem_req = 0;
+            end
+        end
+    end
     // 处理fire_1/
     assign fire_mem_req_o = mem_req_o;
     assign fire_mem_we_o = mem_we_o;

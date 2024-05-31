@@ -43,6 +43,10 @@ module tinyriscv(
     input wire[`INT_BUS] int_i                 // 中断信号
 
     );
+    //temp模块输出信号
+    wire [`MemBus] temp_reg_waddr_o;
+    wire temp_ready_o;
+    wire temp_busy_o;
     //fire模块输出信号
     wire [`MemBus] fire_o;
     wire fire_busy_o;
@@ -125,6 +129,15 @@ module tinyriscv(
         wire[`MemAddrBus] ex_fire_mem_raddr_o;     // 地址，读内存�?
         wire[`MemBus] ex_fire_mem_rdata_o;
         wire[`MemBus] ex_fire_mem_wdata_o;
+        //ex中添加temp模块的输�?
+        wire ex_temp_start_o;               // �?始temp标志
+        wire ex_temp_mem_req_o;                  // 标志位，访存�?
+        wire ex_temp_mem_we_o;                // 内存读写状�??
+        wire[`MemAddrBus] ex_temp_mem_raddr_o;     // 地址，读内存�?
+        wire[`MemBus] ex_temp_mem_rdata_o;
+        wire[`MemBus] ex_temp_mem_wdata_o;
+        wire[`RegAddrBus] ex_temp_reg_waddr_o;
+        
 
     // regs模块输出信号
     wire[`RegBus] regs_rdata1_o;
@@ -362,7 +375,18 @@ module tinyriscv(
         .fire_mem_we_o(ex_fire_mem_we_o),
         .fire_mem_raddr_o(ex_fire_mem_raddr_o),
         .fire_mem_rdata_o(ex_fire_mem_rdata_o),
-        .fire_mem_wdata_o(ex_fire_mem_wdata_o)
+        .fire_mem_wdata_o(ex_fire_mem_wdata_o),
+        //temp交互部分 
+        .temp_busy_i(temp_busy_o),
+        .temp_reg_waddr_i(temp_reg_waddr_o),
+        .temp_ready_i(temp_ready_o),
+        .temp_start_o(ex_temp_start_o),
+        .temp_mem_req_o(ex_temp_mem_req_o),
+        .temp_mem_we_o(ex_temp_mem_we_o),
+        .temp_mem_raddr_o(ex_temp_mem_raddr_o),
+        .temp_mem_rdata_o(ex_temp_mem_rdata_o),
+        .temp_reg_waddr_o(ex_temp_reg_waddr_o)
+
     );
 
     // div模块例化
@@ -408,6 +432,21 @@ module tinyriscv(
         .busy_o(fire_busy_o),
         .ready_o(fire_ready_o)
     );
+
+    //temp模块例化
+    temp u_temp(
+        .clk(clk),
+        .rst(rst),
+        .temp_start_i(ex_temp_start_o),
+        .ex_mem_req_i(ex_temp_mem_req_o),
+        .ex_mem_we_i(ex_temp_mem_we_o),
+        .ex_mem_raddr_i(ex_temp_mem_raddr_o),
+        .ex_mem_rdata_i(ex_temp_mem_rdata_o),
+        .ex_reg_waddr_i(ex_reg_waddr_o),
+        .temp_reg_waddr_o(temp_reg_waddr_o),
+        .busy_o(temp_busy_o),
+        .ready_o(temp_ready_o)
+    );    
 
     // clint模块例化
     clint u_clint(

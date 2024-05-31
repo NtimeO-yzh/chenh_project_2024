@@ -496,9 +496,10 @@ module tinyriscv_soc_tb;
     // read mem data
     initial begin
         //$readmemh ("inst_add.data", tinyriscv_soc_top_0.u_rom._rom);
-        $readmemh ("sID_inst.data", tinyriscv_soc_top_0.u_rom._rom);
+        //$readmemh ("sID_inst.data", tinyriscv_soc_top_0.u_rom._rom);
         //$readmemh ("IF_inst.data", tinyriscv_soc_top_0.u_rom._rom);
         //$readmemh ("PWM_inst.data", tinyriscv_soc_top_0.u_rom._rom);
+        $readmemh ("Temp.data", tinyriscv_soc_top_0.u_rom._rom);
     end
 
     // generate wave file, used by gtkwave
