@@ -51,10 +51,7 @@ module ex(
     input wire[`MemBus] fire_i,
     input wire fire_busy_i,               //fire运算忙标�?
     input wire fire_ready_i,             //fire改变的we信号，控制是写还是读
-    // from temp
-    input wire[`MemBus] temp_i,
-    input wire temp_busy_i,               //temp运算忙标�?
-    input wire temp_ready_i,             //temp改变的we信号，控制是写还是读
+
     // from send
     input wire[31:0] send_ID_i,        //send发�?�的数据
     input wire send_busy_i,               //send运算忙标�?
@@ -92,14 +89,6 @@ module ex(
     output wire[`MemAddrBus] fire_mem_raddr_o,     // 地址，读内存�?
     output wire[`MemBus] fire_mem_rdata_o,      //数据，读取内存的
     output wire[`RegBus] fire_mem_wdata_o,
-    // to temp
-
-    output wire temp_start_o,                // �?始temp标志
-    output wire temp_mem_req_o,                   // 标志位，访存�?
-    output wire temp_mem_we_o,                // 内存读写状�??
-    output wire[`MemAddrBus] temp_mem_raddr_o,     // 地址，读内存�?
-    output wire[`MemBus] temp_mem_rdata_o,      //数据，读取内存的
-    output wire[`RegBus] temp_mem_wdata_o,
 
     // to send
     output wire send_start_o,                // �?始send标志
@@ -159,19 +148,6 @@ module ex(
     reg[`MemBus] fire_mem_wdata;
     reg[`RegBus] fire_reg_wdata;
     reg[`RegAddrBus] fire_reg_waddr;
-    //temp相关中间reg
-    reg temp_start;
-    reg temp_mem_we;
-    reg temp_req;
-    reg temp_hold_flag;
-    reg temp_jump_flag;
-    reg temp_reg_we;
-    reg[`InstAddrBus] temp_jump_addr;
-    reg[`MemAddrBus] temp_mem_waddr;
-    reg[`MemAddrBus] temp_mem_raddr;
-    reg[`MemBus] temp_mem_wdata;
-    reg[`RegBus] temp_reg_wdata;
-    reg[`RegAddrBus] temp_reg_waddr;
     //send相关中间reg
     reg send_start;
     reg send_we;
@@ -229,27 +205,27 @@ module ex(
     assign div_start_o = (int_assert_i == `INT_ASSERT)? `DivStop: div_start;
     
 
-    assign reg_wdata_o = reg_wdata | div_wdata |fire_reg_wdata|temp_reg_wdata;
+    assign reg_wdata_o = reg_wdata | div_wdata |fire_reg_wdata;
     // 响应中断时不写�?�用寄存�?
-    assign reg_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (reg_we || div_we || fire_reg_we || temp_reg_we);
-    assign reg_waddr_o = reg_waddr | div_waddr |fire_reg_waddr|temp_reg_waddr;
+    assign reg_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (reg_we || div_we || fire_reg_we);
+    assign reg_waddr_o = reg_waddr | div_waddr |fire_reg_waddr;
 
     // 响应中断时不写内�?
-    assign mem_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (mem_we || send_we || fire_mem_we||temp_mem_we);
+    assign mem_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (mem_we || send_we || fire_mem_we);
 
     // 响应中断时不向�?�线请求访问内存
-    assign mem_req_o = (int_assert_i == `INT_ASSERT)? `RIB_NREQ: (mem_req || send_req || fire_req||temp_req);
+    assign mem_req_o = (int_assert_i == `INT_ASSERT)? `RIB_NREQ: (mem_req || send_req || fire_req);
 
     //写往内存的地�?
-    assign mem_waddr_o = mem_waddr|send_mem_waddr|fire_mem_waddr|temp_mem_waddr;
+    assign mem_waddr_o = mem_waddr|send_mem_waddr|fire_mem_waddr;
     //从内存读的地�?
-    assign mem_raddr_o = mem_raddr|send_mem_raddr|fire_mem_raddr|temp_mem_raddr;
+    assign mem_raddr_o = mem_raddr|send_mem_raddr|fire_mem_raddr;
     //写往内存的数�?
-    assign mem_wdata_o = mem_wdata|send_mem_wdata|fire_mem_wdata|temp_mem_wdata;
+    assign mem_wdata_o = mem_wdata|send_mem_wdata|fire_mem_wdata;
     //hold方法以及jump，并且处理和中断的关�?
-    assign hold_flag_o = hold_flag || div_hold_flag || send_hold_flag||fire_hold_flag||temp_hold_flag;/////////或�?�send中断
-    assign jump_flag_o = jump_flag || div_jump_flag || send_jump_flag ||fire_jump_flag||temp_jump_flag||((int_assert_i == `INT_ASSERT)? `JumpEnable: `JumpDisable);/////////或�?�send跳转
-    assign jump_addr_o = (int_assert_i == `INT_ASSERT)? int_addr_i: (jump_addr | div_jump_addr | send_jump_addr|fire_jump_addr|temp_jump_addr);////或�?�跳转到�?个地�?，send
+    assign hold_flag_o = hold_flag || div_hold_flag || send_hold_flag||fire_hold_flag;/////////或�?�send中断
+    assign jump_flag_o = jump_flag || div_jump_flag || send_jump_flag ||fire_jump_flag||((int_assert_i == `INT_ASSERT)? `JumpEnable: `JumpDisable);/////////或�?�send跳转
+    assign jump_addr_o = (int_assert_i == `INT_ASSERT)? int_addr_i: (jump_addr | div_jump_addr | send_jump_addr|fire_jump_addr);////或�?�跳转到�?个地�?，send
 
     // 响应中断时不写CSR寄存�?
     assign csr_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: csr_we_i;
@@ -382,60 +358,6 @@ module ex(
             end
         end
     end
-
-    // 处理temp/
-    assign temp_mem_req_o = mem_req_o;
-    assign temp_mem_we_o = mem_we_o;
-    assign temp_mem_raddr_o = mem_raddr_o;
-    assign temp_mem_rdata_o = mem_rdata_i;
-    assign temp_mem_wdata_o = temp_mem_wdata;
-    assign temp_start_o = (int_assert_i == `INT_ASSERT)? 0: temp_start;/////////temp+中断
-    always @ (*) begin
-        if ((opcode == 7'b0101111) && (funct3 == 3'b001)) begin //组合逻辑，这个周期内负责传给temp模块start信号，并且产�?+1的pc地址；下�?个周期就进入下面的else
-            temp_start = 1;
-            temp_jump_flag = `JumpEnable;
-            temp_hold_flag = `HoldEnable;
-            temp_jump_addr = op1_jump_add_op2_jump_res;
-            temp_mem_raddr = 32'h7004_0000;
-            temp_mem_wdata = reg1_rdata_i;
-            temp_mem_we = `WriteDisable;
-            temp_req = 1;//要和总线交互
-            temp_reg_wdata = 32'b0;//不写，随便一个数据都行
-            temp_reg_we = `WriteDisable;//这个周期先不写
-            temp_reg_waddr = reg_waddr_i;//rd
-        end else begin
-            temp_jump_flag = `JumpDisable;
-            temp_jump_addr = `ZeroWord; //?????????这个不应该是保持之前的PC吗，还是说下面有别的操作会给�?个赋值，使得�?以下面会有一个是否hold（√�?
-            temp_mem_wdata = `ZeroWord;
-            temp_mem_waddr = `ZeroWord;
-            if (temp_busy_i == `True) begin
-                temp_start = 1; //�?直保持temp_start的激活状态，关死�?要busy不为0
-                temp_hold_flag = `HoldEnable;
-                temp_req = 1;
-                temp_mem_we = `WriteDisable;
-                temp_reg_wdata = {24'b0,mem_rdata_i[14:7]};
-                temp_reg_waddr = reg_waddr_i;
-                if (temp_ready_i == 1 ) begin 
-                    temp_mem_raddr = 32'h7002_0000;                 
-                    temp_reg_we = `WriteEnable;
-                end 
-                else begin
-                    temp_mem_raddr = 32'h7004_0000;
-                    temp_reg_we = `WriteDisable;
-                end
-            end else begin
-                temp_start = 0;
-                temp_hold_flag = `HoldDisable;
-                temp_mem_wdata = `ZeroWord;
-                temp_mem_waddr = `ZeroWord;
-                temp_mem_we = `WriteDisable;
-                temp_req = 0;
-                temp_mem_raddr = `ZeroWord;
-                temp_reg_waddr = `ZeroWord;
-            end
-        end
-    end
-
     // 处理Send_ID/
     assign send_mem_req_o = mem_req_o;
     assign send_mem_we_o = mem_we_o;
