@@ -3,12 +3,11 @@ module iic
 (
     input                          clk,
     input                          rst,
-    input wire we_i,
-    input wire[31:0] addr_i,
-    input wire[31:0] data_i,
-    output reg[16:0]              data,
-    output reg[31:0]              data_o,
-
+    input wire                    we_i,
+    input wire[31:0]            addr_i,
+    input wire[31:0]            data_i,
+    output [31:0]              data_o,
+    //to LP75
     output                         scl, 
     inout                          sda
 ); 
@@ -19,7 +18,9 @@ module iic
     reg[31:0] islave_addr,idata_o,idata_i;
     reg[2:0]                      cnt;  
     reg[7:0]                      cnt_delay;    
-    reg                           scl_r;    
+    reg                           scl_r;  
+    
+    // wire reg[16:0]              data;
     // 主设备写寄存器
     always @ (posedge clk) begin
         if (rst == 1'b0) begin
@@ -27,6 +28,9 @@ module iic
         end else begin
             if (we_i == 1'b1) begin
                 case (addr_i[23:16])
+                    Idata_i: begin
+                        idata_i <= data_i;
+                    end
                     Idata_i: begin
                         idata_i <= data_i;
                     end
@@ -41,14 +45,14 @@ module iic
     // 主设备读寄存器
     always @ (*) begin
         if (rst == 1'b0) begin
-            data_o = 32'h0;
+            idata_o = 32'h0;
         end else begin
             case (addr_i[23:16])
                 Idata_o: begin
-                    data_o = idata_o;
+                    idata_o = idata_o;
                 end
                 default: begin
-                     data_o = 32'h0;
+                    idata_o = 32'h0;
                 end
             endcase
         end
@@ -64,7 +68,7 @@ module iic
         else 
             cnt_delay <= cnt_delay+1'b1;
     end
-    //分频后的时钟
+    //分频后的计数器，0，1，2，3循环
     always @ (posedge clk or negedge rst) 
     begin
         if(!rst) cnt <= 3'd5;
@@ -78,7 +82,7 @@ module iic
                 endcase
             end
     end
-    
+    //再分频后的时钟，分频计数器0，1为1；2，3为0
     always @ (posedge clk or negedge rst)
     begin
         if(!rst) 
@@ -88,8 +92,8 @@ module iic
         else if(cnt==3'd2) 
             scl_r <= 1'b0;
     end
-    
-    assign scl = scl_r;               
+    assign scl = scl_r;   
+    //状态机部分            
     reg[7:0]                 db_r;    
     reg[15:0]                read_data;  
     parameter     IDLE      = 4'd0;
@@ -130,7 +134,7 @@ module iic
                     sda_link <= 1'b1;    
                     sda_r <= 1'b1;
                     if(tim[25]) begin 
-                        db_r <= `DEVICE_READ; 
+                        db_r <= islave_addr; 
                         cstate <= START;        
                         end
                     else cstate <= IDLE;  
@@ -259,19 +263,20 @@ module iic
     end
 
     assign sda = sda_link ? sda_r:1'bz;
+    assign data_o[15:0] = read_data;//只要求读取数据，没要求显示在管子上，而且只需要读八位
 
-    wire [15:0]             data_conv;
-    wire[31:0]              data_conv1;
-    wire[31:0]              data_conv2;
-    assign data_conv = read_data[15] ? ~read_data[15:0]+1'b1 : read_data[15:0];
-    assign data_conv1=data_conv*125;
-    assign data_conv2=data_conv1/3200;//100*32
-    //sign+转换后的数据
-    always @ (posedge clk or negedge rst)
-    begin 
-        if(!rst) 
-            data<=17'd0;
-        else 
-            data <={read_data[15],data_conv2[15:0]};
-    end
+    // wire [15:0]             data_conv;
+    // wire[31:0]              data_conv1;
+    // wire[31:0]              data_conv2;
+    // assign data_conv = read_data[15] ? ~read_data[15:0]+1'b1 : read_data[15:0];
+    // assign data_conv1=data_conv*125;
+    // assign data_conv2=data_conv1/3200;//(1/8)32
+    // //sign+转换后的数据
+    // always @ (posedge clk or negedge rst)
+    // begin 
+    //     if(!rst) 
+    //         data<=17'd0;
+    //     else 
+    //         data <={read_data[15],data_conv2[15:0]};
+    // end
     endmodule
