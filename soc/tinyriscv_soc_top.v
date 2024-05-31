@@ -33,6 +33,8 @@ module tinyriscv_soc_top(
     input wire uart_rx_pin,  // UART接收引脚
     output wire [3:0]PWM_o,
     inout wire[15:0] gpio,    // GPIO引脚
+    output wire io_scl,
+    inout io_sda,
 
 //    input wire jtag_TCK,     // JTAG TCK引脚
 //    input wire jtag_TMS,     // JTAG TMS引脚
@@ -119,6 +121,12 @@ module tinyriscv_soc_top(
     wire[`MemBus] s6_data_o;
     wire[`MemBus] s6_data_i;
     wire s6_we_o;
+
+    // slave 7 interface
+    wire[`MemAddrBus] s7_addr_o;
+    wire[`MemBus] s7_data_o;
+    wire[`MemBus] s7_data_i;
+    wire s7_we_o;
 
     // rib
     wire rib_hold_flag_o;
@@ -239,6 +247,17 @@ module tinyriscv_soc_top(
         .pw_pin2(PWM_o[2]),
         .pw_pin3(PWM_o[3])
 
+    );
+
+    iic iic_0(
+        .clk(clk),
+        .rst(rst),
+        .we_i(s7_we_o),
+        .addr_i(s7_addr_o),
+        .data_i(s7_data_o),
+        .data_o(s7_data_i),
+        .sda(io_sda),
+        .scl(io_scl)
     );
 
     // io0
@@ -391,6 +410,12 @@ module tinyriscv_soc_top(
         .s6_data_o(s6_data_o),
         .s6_data_i(s6_data_i),
         .s6_we_o(s6_we_o),
+
+        // slave 7 interface
+        .s7_addr_o(s7_addr_o),
+        .s7_data_o(s7_data_o),
+        .s7_data_i(s7_data_i),
+        .s7_we_o(s7_we_o),
 
         .hold_flag_o(rib_hold_flag_o)
     );

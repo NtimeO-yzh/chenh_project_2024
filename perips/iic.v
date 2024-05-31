@@ -6,11 +6,11 @@ module i2c_read_write(
     input wire[31:0]            data_i,
     output [31:0]              data_o,
     inout sda,
-    output reg scl,
+    output reg scl
 
-    output [7:0]pointer_tb,
-    output [15:0]data_tb,
-    output [7:0]address_tb
+    // output [7:0]pointer_tb,
+    // output [15:0]data_tb,
+    // output [7:0]address_tb
 );
 parameter   [3:0] idle =4'd0,
                  start=4'd1,
@@ -41,9 +41,9 @@ reg ptr_write;
 wire rd;//控制是对从寄存器读还是写
 wire [1:0] pointer_bit;
 assign sda= sda_link ?sda_reg:1'bz;
-assign data_tb=data_reg;
-assign address_tb=address_reg;
-assign pointer_tb=pointer_reg;
+// assign data_tb=data_reg;
+// assign address_tb=address_reg;
+// assign pointer_tb=pointer_reg;
 //////设置iic内部寄存器
     localparam Islave_addr = 8'h1;
     localparam Idata_o = 8'h2;

@@ -24,82 +24,88 @@ module rib(
     input wire rst,//组合逻辑
 
     // master 0 interface
-    input wire[`MemAddrBus] m0_addr_i,     // 主设�?0读�?�写地址
-    input wire[`MemBus] m0_data_i,         // 主设�?0写数�?
-    output reg[`MemBus] m0_data_o,         // 主设�?0读取到的数据
-    input wire m0_req_i,                   // 主设�?0访问请求标志
-    input wire m0_we_i,                    // 主设�?0写标�?
+    input wire[`MemAddrBus] m0_addr_i,     // 主设�?0读�?�写地址
+    input wire[`MemBus] m0_data_i,         // 主设�?0写数�?
+    output reg[`MemBus] m0_data_o,         // 主设�?0读取到的数据
+    input wire m0_req_i,                   // 主设�?0访问请求标志
+    input wire m0_we_i,                    // 主设�?0写标�?
 
     // master 1 interface
-    input wire[`MemAddrBus] m1_addr_i,     // 主设�?1读�?�写地址
-    input wire[`MemBus] m1_data_i,         // 主设�?1写数�?
-    output reg[`MemBus] m1_data_o,         // 主设�?1读取到的数据
-    input wire m1_req_i,                   // 主设�?1访问请求标志
-    input wire m1_we_i,                    // 主设�?1写标�?
+    input wire[`MemAddrBus] m1_addr_i,     // 主设�?1读�?�写地址
+    input wire[`MemBus] m1_data_i,         // 主设�?1写数�?
+    output reg[`MemBus] m1_data_o,         // 主设�?1读取到的数据
+    input wire m1_req_i,                   // 主设�?1访问请求标志
+    input wire m1_we_i,                    // 主设�?1写标�?
 
     // master 2 interface
-    input wire[`MemAddrBus] m2_addr_i,     // 主设�?2读�?�写地址
-    input wire[`MemBus] m2_data_i,         // 主设�?2写数�?
-    output reg[`MemBus] m2_data_o,         // 主设�?2读取到的数据
-    input wire m2_req_i,                   // 主设�?2访问请求标志
-    input wire m2_we_i,                    // 主设�?2写标�?
+    input wire[`MemAddrBus] m2_addr_i,     // 主设�?2读�?�写地址
+    input wire[`MemBus] m2_data_i,         // 主设�?2写数�?
+    output reg[`MemBus] m2_data_o,         // 主设�?2读取到的数据
+    input wire m2_req_i,                   // 主设�?2访问请求标志
+    input wire m2_we_i,                    // 主设�?2写标�?
 
     // master 3 interface
-    input wire[`MemAddrBus] m3_addr_i,     // 主设�?3读�?�写地址
-    input wire[`MemBus] m3_data_i,         // 主设�?3写数�?
-    output reg[`MemBus] m3_data_o,         // 主设�?3读取到的数据
-    input wire m3_req_i,                   // 主设�?3访问请求标志
-    input wire m3_we_i,                    // 主设�?3写标�?
+    input wire[`MemAddrBus] m3_addr_i,     // 主设�?3读�?�写地址
+    input wire[`MemBus] m3_data_i,         // 主设�?3写数�?
+    output reg[`MemBus] m3_data_o,         // 主设�?3读取到的数据
+    input wire m3_req_i,                   // 主设�?3访问请求标志
+    input wire m3_we_i,                    // 主设�?3写标�?
 
     // slave 0 interface
-    output reg[`MemAddrBus] s0_addr_o,     // 从设�?0读�?�写地址
-    output reg[`MemBus] s0_data_o,         // 从设�?0写数�?
-    input wire[`MemBus] s0_data_i,         // 从设�?0读取到的数据
-    output reg s0_we_o,                    // 从设�?0写标�?
+    output reg[`MemAddrBus] s0_addr_o,     // 从设�?0读�?�写地址
+    output reg[`MemBus] s0_data_o,         // 从设�?0写数�?
+    input wire[`MemBus] s0_data_i,         // 从设�?0读取到的数据
+    output reg s0_we_o,                    // 从设�?0写标�?
 
     // slave 1 interface
-    output reg[`MemAddrBus] s1_addr_o,     // 从设�?1读�?�写地址
-    output reg[`MemBus] s1_data_o,         // 从设�?1写数�?
-    input wire[`MemBus] s1_data_i,         // 从设�?1读取到的数据
-    output reg s1_we_o,                    // 从设�?1写标�?
+    output reg[`MemAddrBus] s1_addr_o,     // 从设�?1读�?�写地址
+    output reg[`MemBus] s1_data_o,         // 从设�?1写数�?
+    input wire[`MemBus] s1_data_i,         // 从设�?1读取到的数据
+    output reg s1_we_o,                    // 从设�?1写标�?
 
     // slave 2 interface
-    output reg[`MemAddrBus] s2_addr_o,     // 从设�?2读�?�写地址
-    output reg[`MemBus] s2_data_o,         // 从设�?2写数�?
-    input wire[`MemBus] s2_data_i,         // 从设�?2读取到的数据
-    output reg s2_we_o,                    // 从设�?2写标�?
+    output reg[`MemAddrBus] s2_addr_o,     // 从设�?2读�?�写地址
+    output reg[`MemBus] s2_data_o,         // 从设�?2写数�?
+    input wire[`MemBus] s2_data_i,         // 从设�?2读取到的数据
+    output reg s2_we_o,                    // 从设�?2写标�?
 
     // slave 3 interface
-    output reg[`MemAddrBus] s3_addr_o,     // 从设�?3读�?�写地址
-    output reg[`MemBus] s3_data_o,         // 从设�?3写数�?
-    input wire[`MemBus] s3_data_i,         // 从设�?3读取到的数据
-    output reg s3_we_o,                    // 从设�?3写标�?
+    output reg[`MemAddrBus] s3_addr_o,     // 从设�?3读�?�写地址
+    output reg[`MemBus] s3_data_o,         // 从设�?3写数�?
+    input wire[`MemBus] s3_data_i,         // 从设�?3读取到的数据
+    output reg s3_we_o,                    // 从设�?3写标�?
 
     // slave 4 interface
-    output reg[`MemAddrBus] s4_addr_o,     // 从设�?4读�?�写地址
-    output reg[`MemBus] s4_data_o,         // 从设�?4写数�?
-    input wire[`MemBus] s4_data_i,         // 从设�?4读取到的数据
-    output reg s4_we_o,                    // 从设�?4写标�?
+    output reg[`MemAddrBus] s4_addr_o,     // 从设�?4读�?�写地址
+    output reg[`MemBus] s4_data_o,         // 从设�?4写数�?
+    input wire[`MemBus] s4_data_i,         // 从设�?4读取到的数据
+    output reg s4_we_o,                    // 从设�?4写标�?
 
     // slave 5 interface
-    output reg[`MemAddrBus] s5_addr_o,     // 从设�?5读�?�写地址
-    output reg[`MemBus] s5_data_o,         // 从设�?5写数�?
-    input wire[`MemBus] s5_data_i,         // 从设�?5读取到的数据
-    output reg s5_we_o,                    // 从设�?5写标�?
+    output reg[`MemAddrBus] s5_addr_o,     // 从设�?5读�?�写地址
+    output reg[`MemBus] s5_data_o,         // 从设�?5写数�?
+    input wire[`MemBus] s5_data_i,         // 从设�?5读取到的数据
+    output reg s5_we_o,                    // 从设�?5写标�?
 
     // slave 6 interface
-    output reg[`MemAddrBus] s6_addr_o,     // 从设�?6读�?�写地址
-    output reg[`MemBus] s6_data_o,         // 从设�?6写数�?
-    input wire[`MemBus] s6_data_i,         // 从设�?6读取到的数据
-    output reg s6_we_o,                    // 从设�?6写标�?
+    output reg[`MemAddrBus] s6_addr_o,     // 从设�?6读�?�写地址
+    output reg[`MemBus] s6_data_o,         // 从设�?6写数�?
+    input wire[`MemBus] s6_data_i,         // 从设�?6读取到的数据
+    output reg s6_we_o,                    // 从设�?6写标�?
 
-    output reg hold_flag_o                 // 暂停流水线标�?
+    // slave 7 interface
+    output reg[`MemAddrBus] s7_addr_o,     // 从设�?7读�?�写地址
+    output reg[`MemBus] s7_data_o,         // 从设�?7写数�?
+    input wire[`MemBus] s7_data_i,         // 从设�?7读取到的数据
+    output reg s7_we_o,                    // 从设�?7写标�?
+
+    output reg hold_flag_o                 // 暂停流水线标�?
 
     );
 
 
-    // 访问地址的最�?4位决定要访问的是哪一个从设备
-    // 因此�?多支�?16个从设备
+    // 访问地址的最�?4位决定要访问的是哪一个从设备
+    // 因此�?多支�?16个从设备
     parameter [3:0]slave_0 = 4'b0000;
     parameter [3:0]slave_1 = 4'b0001;
     parameter [3:0]slave_2 = 4'b0010;
@@ -107,6 +113,7 @@ module rib(
     parameter [3:0]slave_4 = 4'b0100;
     parameter [3:0]slave_5 = 4'b0101;
     parameter [3:0]slave_6 = 4'b0110;
+    parameter [3:0]slave_7 = 4'b0111;
 
     parameter [1:0]grant0 = 2'h0;
     parameter [1:0]grant1 = 2'h1;
@@ -117,12 +124,12 @@ module rib(
     reg[1:0] grant;
 
 
-    // 主设备请求信�?
+    // 主设备请求信�?
     assign req = {m3_req_i, m2_req_i, m1_req_i, m0_req_i};
 
     // 仲裁逻辑
-    // 固定优先级仲裁机�?
-    // 优先级由高到低：主设�?3，主设备0，主设备2，主设备1
+    // 固定优先级仲裁机�?
+    // 优先级由高到低：主设�?3，主设备0，主设备2，主设备1
     always @ (*) begin
         if (req[3]) begin
             grant = grant3;
@@ -139,7 +146,7 @@ module rib(
         end
     end
 
-    // 根据仲裁结果，�?�择(访问)对应的从设备
+    // 根据仲裁结果，�?�择(访问)对应的从设备
     always @ (*) begin
         m0_data_o = `ZeroWord;
         m1_data_o = `INST_NOP;
@@ -153,6 +160,7 @@ module rib(
         s4_addr_o = `ZeroWord;
         s5_addr_o = `ZeroWord;
         s6_addr_o = `ZeroWord;
+        s7_addr_o = `ZeroWord;
         s0_data_o = `ZeroWord;
         s1_data_o = `ZeroWord;
         s2_data_o = `ZeroWord;
@@ -160,6 +168,7 @@ module rib(
         s4_data_o = `ZeroWord;
         s5_data_o = `ZeroWord;
         s6_data_o = `ZeroWord;
+        s7_data_o = `ZeroWord;
         s0_we_o = `WriteDisable;
         s1_we_o = `WriteDisable;
         s2_we_o = `WriteDisable;
@@ -167,6 +176,7 @@ module rib(
         s4_we_o = `WriteDisable;
         s5_we_o = `WriteDisable;
         s6_we_o = `WriteDisable;
+        s7_we_o = `WriteDisable;
 
         case (grant)
             grant0: begin
@@ -212,6 +222,12 @@ module rib(
                         s6_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
                         s6_data_o = m0_data_i;
                         m0_data_o = s6_data_i;
+                    end
+                    slave_7: begin
+                        s7_we_o = m0_we_i;
+                        s7_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
+                        s7_data_o = m0_data_i;
+                        m0_data_o = s7_data_i;
                     end
                     default: begin
 
@@ -262,6 +278,12 @@ module rib(
                         s6_data_o = m0_data_i;
                         m0_data_o = s6_data_i;
                     end
+                    slave_7: begin
+                        s7_we_o = m0_we_i;
+                        s7_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
+                        s7_data_o = m0_data_i;
+                        m0_data_o = s7_data_i;
+                    end
                     default: begin
 
                     end
@@ -311,6 +333,12 @@ module rib(
                         s6_data_o = m0_data_i;
                         m0_data_o = s6_data_i;
                     end
+                    slave_7: begin
+                        s7_we_o = m0_we_i;
+                        s7_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
+                        s7_data_o = m0_data_i;
+                        m0_data_o = s7_data_i;
+                    end
                     default: begin
 
                     end
@@ -359,6 +387,12 @@ module rib(
                         s6_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
                         s6_data_o = m0_data_i;
                         m0_data_o = s6_data_i;
+                    end
+                    slave_7: begin
+                        s7_we_o = m0_we_i;
+                        s7_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
+                        s7_data_o = m0_data_i;
+                        m0_data_o = s7_data_i;
                     end
                     default: begin
 
