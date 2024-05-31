@@ -22,19 +22,19 @@ module tinyriscv(
     input wire clk,
     input wire rst,
 
-    output wire[`MemAddrBus] rib_ex_addr_o,    // 读�?�写外设的地�?
+    output wire[`MemAddrBus] rib_ex_addr_o,    // 读�?�写外设的地�?
     input wire[`MemBus] rib_ex_data_i,         // 从外设读取的数据
-    output wire[`MemBus] rib_ex_data_o,        // 写入外设的数�?
+    output wire[`MemBus] rib_ex_data_o,        // 写入外设的数�?
     output wire rib_ex_req_o,                  // 访问外设请求
-    output wire rib_ex_we_o,                   // 写外设标�?
+    output wire rib_ex_we_o,                   // 写外设标�?
 
     output wire[`MemAddrBus] rib_pc_addr_o,    // 取指地址
-    input wire[`MemBus] rib_pc_data_i,         // 取到的指令内�?
+    input wire[`MemBus] rib_pc_data_i,         // 取到的指令内�?
 
-    input wire[`RegAddrBus] jtag_reg_addr_i,   // jtag模块读�?�写寄存器的地址
+    input wire[`RegAddrBus] jtag_reg_addr_i,   // jtag模块读�?�写寄存器的地址
     input wire[`RegBus] jtag_reg_data_i,       // jtag模块写寄存器数据
     input wire jtag_reg_we_i,                  // jtag模块写寄存器标志
-    output wire[`RegBus] jtag_reg_data_o,      // jtag模块读取到的寄存器数�?
+    output wire[`RegBus] jtag_reg_data_o,      // jtag模块读取到的寄存器数�?
 
     input wire rib_hold_flag_i,                // 总线暂停标志
     input wire jtag_halt_flag_i,               // jtag暂停标志
@@ -47,6 +47,10 @@ module tinyriscv(
     wire [`MemBus] fire_o;
     wire fire_busy_o;
     wire fire_ready_o;
+    //temp模块输出信号
+    wire [`MemBus] temp_o;
+    wire temp_busy_o;
+    wire temp_ready_o;
     //send模块输出信号
     wire [`MemBus] send_ID_o;
     wire send_busy_o;
@@ -112,19 +116,26 @@ module tinyriscv(
     wire[`RegBus] ex_csr_wdata_o;
     wire ex_csr_we_o;
     wire[`MemAddrBus] ex_csr_waddr_o;
-        //ex中添加send模块的输�?
-        wire ex_send_start_o;               // �?始send标志
-        wire ex_send_mem_req_o;                  // 标志位，访存�?
-        wire ex_send_mem_we_o;                // 内存读写状�??
-        wire[`MemAddrBus] ex_send_mem_raddr_o;     // 地址，读内存�?
+        //ex中添加send模块的输�?
+        wire ex_send_start_o;               // �?始send标志
+        wire ex_send_mem_req_o;                  // 标志位，访存�?
+        wire ex_send_mem_we_o;                // 内存读写状�??
+        wire[`MemAddrBus] ex_send_mem_raddr_o;     // 地址，读内存�?
         wire[`MemBus] ex_send_mem_rdata_o;
-        //ex中添加fire模块的输�?
-        wire ex_fire_start_o;               // �?始fire标志
-        wire ex_fire_mem_req_o;                  // 标志位，访存�?
-        wire ex_fire_mem_we_o;                // 内存读写状�??
-        wire[`MemAddrBus] ex_fire_mem_raddr_o;     // 地址，读内存�?
+        //ex中添加fire模块的输�?
+        wire ex_fire_start_o;               // �?始fire标志
+        wire ex_fire_mem_req_o;                  // 标志位，访存�?
+        wire ex_fire_mem_we_o;                // 内存读写状�??
+        wire[`MemAddrBus] ex_fire_mem_raddr_o;     // 地址，读内存�?
         wire[`MemBus] ex_fire_mem_rdata_o;
         wire[`MemBus] ex_fire_mem_wdata_o;
+        //ex中添加temp模块的输�?
+        wire ex_temp_start_o;               // �?始temp标志
+        wire ex_temp_mem_req_o;                  // 标志位，访存�?
+        wire ex_temp_mem_we_o;                // 内存读写状�??
+        wire[`MemAddrBus] ex_temp_mem_raddr_o;     // 地址，读内存�?
+        wire[`MemBus] ex_temp_mem_rdata_o;
+        wire[`MemBus] ex_temp_mem_wdata_o;
 
     // regs模块输出信号
     wire[`RegBus] regs_rdata1_o;
@@ -362,7 +373,17 @@ module tinyriscv(
         .fire_mem_we_o(ex_fire_mem_we_o),
         .fire_mem_raddr_o(ex_fire_mem_raddr_o),
         .fire_mem_rdata_o(ex_fire_mem_rdata_o),
-        .fire_mem_wdata_o(ex_fire_mem_wdata_o)
+        .fire_mem_wdata_o(ex_fire_mem_wdata_o),
+        //temp交互部分 
+        .temp_i(temp_o),
+        .temp_busy_i(temp_busy_o),
+        .temp_ready_i(temp_ready_o),
+        .temp_start_o(ex_temp_start_o),
+        .temp_mem_req_o(ex_temp_mem_req_o),
+        .temp_mem_we_o(ex_temp_mem_we_o),
+        .temp_mem_raddr_o(ex_temp_mem_raddr_o),
+        .temp_mem_rdata_o(ex_temp_mem_rdata_o),
+        .temp_mem_wdata_o(ex_temp_mem_wdata_o)
     );
 
     // div模块例化
@@ -407,6 +428,21 @@ module tinyriscv(
         .fire_o(fire_o),
         .busy_o(fire_busy_o),
         .ready_o(fire_ready_o)
+    );
+
+    //temp模块例化
+    temp u_temp(
+        .clk(clk),
+        .rst(rst),
+        .temp_start_i(ex_temp_start_o),
+        .ex_mem_req_i(ex_temp_mem_req_o),
+        .ex_mem_we_i(ex_temp_mem_we_o),
+        .ex_mem_raddr_i(ex_temp_mem_raddr_o),
+        .ex_mem_rdata_i(ex_temp_mem_rdata_o),
+        .ex_mem_wdata_i(ex_temp_mem_wdata_o),
+        .temp_o(temp_o),
+        .busy_o(temp_busy_o),
+        .ready_o(temp_ready_o)
     );
 
     // clint模块例化
