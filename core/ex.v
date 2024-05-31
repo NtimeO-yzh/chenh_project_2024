@@ -230,7 +230,7 @@ module ex(
     assign div_start_o = (int_assert_i == `INT_ASSERT)? `DivStop: div_start;
     
 
-    assign reg_wdata_o = reg_wdata | div_wdata |fire_reg_wdata;
+    assign reg_wdata_o = reg_wdata | div_wdata |fire_reg_wdata|temp_reg_wdata;
     // 响应中断时不写�?�用寄存�?
     assign reg_we_o = (int_assert_i == `INT_ASSERT)? `WriteDisable: (reg_we || div_we || fire_reg_we|| temp_reg_we );//
     
@@ -365,12 +365,13 @@ module ex(
                 temp_start = 1;//zzzzzzzzzzzzzzzzz
                 temp_hold_flag = `HoldEnable;//zzzzzzzzzzzzzzzzz
                 temp_mem_req = 1;//zzzzzzzzzzzzzzzzz
-                temp_reg_we = `WriteDisable;//zzzzzzzzzzzzzzzzz
                 if (temp_ready_i == 1) begin 
+                    temp_reg_we = `WriteEnable;
                     temp_reg_waddr = temp_reg_waddr_i;
                     temp_mem_raddr = 32'h7002_0000;//zzzzzzzzzzzzzzzzz
                     temp_reg_wdata = {24'b0,mem_rdata_i[14:7]}; 
                 end else begin
+                    temp_reg_we = `WriteDisable;
                     temp_reg_waddr = `ZeroWord;
                     temp_reg_wdata = `ZeroWord;
                     temp_mem_raddr = 32'h7004_0000;//zzzzzzzzzzzzzzzzz

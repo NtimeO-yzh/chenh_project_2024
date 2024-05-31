@@ -37,10 +37,12 @@ reg [15:0]data_reg;
 reg [8:0]count1;
 reg [3:0]data_count;
 reg [24:0]count2;
+reg ptr_reg;
 reg ptr_write; 
 wire rd;//控制是对从寄存器读还是写
 wire [1:0] pointer_bit;
 assign sda= sda_link ?sda_reg:1'bz;
+
 // assign data_tb=data_reg;
 // assign address_tb=address_reg;
 // assign pointer_tb=pointer_reg;
@@ -49,20 +51,24 @@ assign sda= sda_link ?sda_reg:1'bz;
     localparam Idata_o = 8'h2;
     localparam Idata_i = 8'h3;
     localparam Iic_status = 8'h4;
+    
     reg [31:0] iic_status; 
     reg[31:0] islave_addr,idata_o,idata_i;
     reg[2:0]                      cnt;  
     reg[7:0]                      cnt_delay;    
     reg                           scl_r;  
+    assign data_o = idata_o;
     // 主设备写寄存器
     always @ (posedge clk) begin
         if (rst == 1'b0) begin
             idata_i <= 32'h0;
             islave_addr<= 32'h0;
+            ptr_reg <= 0;
         end else begin
             if (we_i == 1'b1) begin
                 case (addr_i[23:16])
                     Idata_i: begin
+                        ptr_reg <= data_i[0];
                         idata_i <= data_i;
                         islave_addr[6:0] <= data_i[7:1];
                     end
@@ -97,7 +103,7 @@ assign sda= sda_link ?sda_reg:1'bz;
     end  
 //count1 : 跟随clk，500最多
 always @(posedge clk) begin
-    if(rst) begin
+    if(!rst) begin
         count1<=9'd0;
     end
     else if(count1==9'd199) begin
@@ -109,7 +115,7 @@ end
 
 //scl :周期500clk
 always @(posedge clk ) begin
-    if(rst) begin
+    if(!rst) begin
         scl<=1'b0;
     end
     else if (count1==9'd99) begin
@@ -127,14 +133,14 @@ assign rd = idata_i[29];
 assign pointer_bit = idata_i[31:30];
 always @(posedge clk ) begin
     
-if(rst) begin
+if(!rst) begin
         data_count<=4'd0;
         address_reg <= 8'b00000000;
         pointer_reg <= 8'd0;
         state<= idle;
         sda_link<=1'b1;    
         sda_reg<=1'b1;
-        ptr_write<=idata_i[8];   
+        ptr_write<=0;   
         count2<=25'd0;
         iic_status <= 32'b1;
     end
@@ -144,14 +150,14 @@ else begin
         case (state)
         idle: 
         begin
-            iic_status[0] <= 1;
+            ptr_write<=ptr_reg; 
+            iic_status <= 32'b1;
             sda_link<=1;    
             sda_reg<=1;     
             if (count2==25'd4_999) begin
                 count2<=25'd0;
                 state<=start;
             end
-
             else begin
                 count2<=count2+1'b1;
                 state<=idle;
@@ -370,7 +376,6 @@ else begin
     end
 else begin
     case (state)
-
        idle: 
        begin
          sda_link<=1;    
@@ -379,7 +384,6 @@ else begin
             count2<=25'd0;
             state<=start;
          end
-
          else begin
             count2<=count2+1'b1;
             state<=idle;

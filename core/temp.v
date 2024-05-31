@@ -43,9 +43,11 @@ module temp(
                     end  
                 end else begin
                     busy_o <= 0;
+                    count <= 0;
                 end
             end else begin
                 busy_o <= 0;
+                count <= 0;
             end
         end
     end
