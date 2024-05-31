@@ -148,7 +148,7 @@ else begin
             end
     //-----------------------------------------------------------------------------------------------------------
             addack: begin
-                if (!sda && count1==9'd374) begin
+                if (!sda && count1==9'd124) begin
                     if (ptr_write==1) begin //***********read TOS,TEMP,THY with pointer*************//
                         state<=pointer;
                         pointer_reg<={6'b000000,pointer_bit}; //setting to reading tos register
@@ -156,11 +156,14 @@ else begin
                         sda_reg<=1'b0;
                         data_count<=4'd0;
                     end
-                    else 
-                    state<=read15to8;//***********read without pointer*************//
+                    else if((pointer_bit == 2'b01) && (address_reg[7:4]==4'b1001)) begin//read 1 byte data
+                        state<=read7to0;
+                    end else begin
+                        state<=read15to8;//***********read without pointer*************//
+                    end
                 end
 
-                else if(count1 ==29'd249) begin
+                else if(count1 ==9'd249) begin
                     if (ptr_write==1) begin
                         state<=pointer;
                         pointer_reg<={6'b000000,pointer_bit}; //setting to reading tos register
@@ -168,8 +171,11 @@ else begin
                         sda_reg<=1'b0;
                         data_count<=4'd0;
                     end
-                    else 
-                    state<=read15to8;
+                    else if((pointer_bit == 2'b01) & &(address_reg[7:4]==4'b1001)) begin
+                        state<=read7to0;
+                    end else begin
+                        state<=read15to8;//***********read without pointer*************//read 1 byte data
+                    end
                 end
             end 
     //-----------------------------------------------------------------------------------------------------------    
@@ -182,29 +188,29 @@ else begin
                     data_count<=4'd0;
                     end
                 
-                else begin
-                    state<=pointer;
-                    data_count<=data_count+1'b1;
-                    case(data_count)
-                            4'd0: sda_reg <= pointer_reg[7];
-                            4'd1: sda_reg <= pointer_reg[6];
-                            4'd2: sda_reg <= pointer_reg[5];
-                            4'd3: sda_reg <= pointer_reg[4];
-                            4'd4: sda_reg <= pointer_reg[3];
-                            4'd5: sda_reg <= pointer_reg[2];
-                            4'd6: sda_reg <= pointer_reg[1];
-                            4'd7: sda_reg <= pointer_reg[0];
-                            default: ;
-                        endcase
+                    else begin
+                        state<=pointer;
+                        data_count<=data_count+1'b1;
+                        case(data_count)
+                                4'd0: sda_reg <= pointer_reg[7];
+                                4'd1: sda_reg <= pointer_reg[6];
+                                4'd2: sda_reg <= pointer_reg[5];
+                                4'd3: sda_reg <= pointer_reg[4];
+                                4'd4: sda_reg <= pointer_reg[3];
+                                4'd5: sda_reg <= pointer_reg[2];
+                                4'd6: sda_reg <= pointer_reg[1];
+                                4'd7: sda_reg <= pointer_reg[0];
+                                default: ;
+                            endcase
+                    end
                 end
-            end
-                else
-                state<=pointer;
+            else
+            state<=pointer;
 
             end
     //-------------------------------------------------------------------------------------------------------------- 
         pointerack: begin //pointer之后的rs，但是不虚写了，真的读了
-            if(!sda && count1==9'd374) begin
+            if(!sda && count1==9'd124) begin
                 ptr_write<=1'b0; 
                 state<=start;
             end
@@ -370,7 +376,7 @@ else begin
 //-----------------------------------------------------------------------------------------------------------
         addack: begin
 
-            if (!sda && count1==9'd374) begin
+            if (!sda && count1==9'd124) begin
                     state<=pointer;
                     pointer_reg<={6'b000000,pointer_bit};  
                     sda_link<=1'b1;
@@ -422,7 +428,7 @@ else begin
         end
 //-------------------------------------------------------------------------------------------------------------- 
      pointerack: begin
-        if(!sda && count1==9'd374) begin
+        if(!sda && count1==9'd124) begin
             data_reg<=i_data;
            state<=write15to8;
            sda_link<=1'b1;
@@ -464,7 +470,7 @@ else begin
      end
 //-----------------------------------------------------------------------------------------------------------------
      writeack: begin
-        if(count1==9'd374 && !sda) begin
+        if(count1==9'd124 && !sda) begin
             state<=write7to0;
             sda_link<=1'b1;
         end
@@ -504,7 +510,7 @@ else begin
      end
 //-----------------------------------------------------------------------------------------------------------------
       writeack2: begin
-        if(count1==9'd374 && !sda) begin
+        if(count1==9'd124 && !sda) begin
             state<=stop;
             sda_link<=1'b1;
         end
