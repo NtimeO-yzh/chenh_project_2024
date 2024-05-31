@@ -1,4 +1,4 @@
-module i2c_read_write(
+module iic(
     input clk,
     input rst,
     input wire                    we_i,
