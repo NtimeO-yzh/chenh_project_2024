@@ -19,8 +19,6 @@ module iic
     reg[2:0]                      cnt;  
     reg[7:0]                      cnt_delay;    
     reg                           scl_r;  
-    
-    // wire reg[16:0]              data;
     // 主设备写寄存器
     always @ (posedge clk) begin
         if (rst == 1'b0) begin
@@ -150,7 +148,7 @@ module iic
                         end
                     else cstate<=START;
                 end
-            ADDR:    begin
+            ADDR:   begin
                     if(`SCL_LOW) begin
                             if(num == 4'd8) begin    
                                     num <= 4'd0; 

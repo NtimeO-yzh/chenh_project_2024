@@ -1,18 +1,17 @@
-module i2c_read_write(clk,rst,sda,scl,address_tb,pointer_tb,data_tb,pointer_bit,rd,i_address,i_data);
+module i2c_read_write(
+    input clk,
+    input rst,
+    input wire                    we_i,
+    input wire[31:0]            addr_i,
+    input wire[31:0]            data_i,
+    output [31:0]              data_o,
+    inout sda,
+    output reg scl,
 
-input clk;
-input rst;
-input rd;//控制是对从寄存器读还是写
-inout sda;
-output reg scl;
-input [1:0] pointer_bit;
-input [2:0]i_address; 
-input [15:0]i_data;
-
-output [7:0]pointer_tb;
-output [15:0]data_tb;
-output [7:0]address_tb;
-
+    output [7:0]pointer_tb,
+    output [15:0]data_tb,
+    output [7:0]address_tb
+);
 parameter   [3:0] idle =4'd0,
                  start=4'd1,
                  address=4'd2,
@@ -39,17 +38,62 @@ reg [8:0]count1;
 reg [3:0]data_count;
 reg [24:0]count2;
 reg ptr_write; 
-
+wire rd;//控制是对从寄存器读还是写
+wire [1:0] pointer_bit;
 assign sda= sda_link ?sda_reg:1'bz;
 assign data_tb=data_reg;
 assign address_tb=address_reg;
 assign pointer_tb=pointer_reg;
+//////设置iic内部寄存器
+    localparam Islave_addr = 8'h1;
+    localparam Idata_o = 8'h2;
+    localparam Idata_i = 8'h3;
+    reg[31:0] islave_addr,idata_o,idata_i;
+    reg[2:0]                      cnt;  
+    reg[7:0]                      cnt_delay;    
+    reg                           scl_r;  
+    // 主设备写寄存器
+    always @ (posedge clk) begin
+        if (rst == 1'b0) begin
+            idata_i <= 32'h0;
+        end else begin
+            if (we_i == 1'b1) begin
+                case (addr_i[23:16])
+                    Idata_i: begin
+                        idata_i <= data_i;
+                    end
+                    Islave_addr: begin
+                        islave_addr <= data_i;
+                    end
+                    default : begin
+                        idata_i <= 32'h0;
+                    end
+                endcase
+            end 
+        end
+    end
+
+    // 主设备读寄存器
+    always @ (*) begin
+        if (rst == 1'b0) begin
+            idata_o = 32'h0;
+        end else begin
+            case (addr_i[23:16])
+                Idata_o: begin
+                    idata_o[15:0] = data_reg;
+                end
+                default: begin
+                    idata_o = 32'h0;
+                end
+            endcase
+        end
+    end  
 //count1 : 跟随clk，500最多
 always @(posedge clk) begin
     if(rst) begin
         count1<=9'd0;
     end
-    else if(count1==9'd499) begin
+    else if(count1==9'd199) begin
         count1<=9'd0;
     end
     else 
@@ -61,16 +105,19 @@ always @(posedge clk ) begin
     if(rst) begin
         scl<=1'b0;
     end
-    else if (count1==9'd249) begin
+    else if (count1==9'd99) begin
         scl<=1'b0;
     end
-    else if (count1==9'd499) begin
+    else if (count1==9'd199) begin
         scl<=1'b1;
     end
     else 
       scl<=scl;
 end
 
+//
+assign rd = idata_i[29];
+assign pointer_bit = idata_i[31:30];
 always @(posedge clk ) begin
     
 if(rst) begin
@@ -80,7 +127,7 @@ if(rst) begin
         state<= idle;
         sda_link<=1'b1;    
         sda_reg<=1'b1;
-        ptr_write<=1'b1;   
+        ptr_write<=idata_i[8];   
         count2<=25'd0;
     end
 
@@ -103,15 +150,15 @@ else begin
         end
     //-----------------------------------------------------------------------------------------------------------
         start: begin
-                if(count1==9'd124) begin     
+                if(count1==9'd49) begin     
                 sda_reg<=1'b0;
                 sda_link=1'b1;
                 state<=address;
                 data_count<=4'd0;
                 if(ptr_write)
-                    address_reg<={4'b1001,i_address,1'b0};
+                    address_reg<={islave_addr[7:1],1'b0};
                 else
-                    address_reg<= {4'b1001,i_address,1'b1};
+                    address_reg<={islave_addr[7:1],1'b1};
             end
             else begin
                 state<=start;
@@ -119,7 +166,7 @@ else begin
         end
     //-----------------------------------------------------------------------------------------------------------
             address: begin
-                if (count1==9'd374) begin
+                if (count1==9'd149) begin
                     if (data_count==4'd8) begin
                         state<=addack;
                         data_count<=4'd0;
@@ -148,7 +195,7 @@ else begin
             end
     //-----------------------------------------------------------------------------------------------------------
             addack: begin
-                if (!sda && count1==9'd124) begin
+                if (!sda && count1==9'd49) begin
                     if (ptr_write==1) begin //***********read TOS,TEMP,THY with pointer*************//
                         state<=pointer;
                         pointer_reg<={6'b000000,pointer_bit}; //setting to reading tos register
@@ -163,7 +210,7 @@ else begin
                     end
                 end
 
-                else if(count1 ==9'd249) begin
+                else if(count1 ==9'd99) begin
                     if (ptr_write==1) begin
                         state<=pointer;
                         pointer_reg<={6'b000000,pointer_bit}; //setting to reading tos register
@@ -180,7 +227,7 @@ else begin
             end 
     //-----------------------------------------------------------------------------------------------------------    
             pointer: begin//把8位数据给pointer_reg
-                if(count1==9'd374) begin
+                if(count1==9'd149) begin
                     if(data_count==4'd8) begin
                     state<=pointerack;
                     sda_link<=1'b0;
@@ -210,11 +257,11 @@ else begin
             end
     //-------------------------------------------------------------------------------------------------------------- 
         pointerack: begin //pointer之后的rs，但是不虚写了，真的读了
-            if(!sda && count1==9'd124) begin
+            if(!sda && count1==9'd49) begin
                 ptr_write<=1'b0; 
                 state<=start;
             end
-            else if( count1==9'd249) begin
+            else if( count1==9'd99) begin
                 ptr_write<=1'b0;
                 state<=start;
             end
@@ -223,14 +270,14 @@ else begin
         end
     //-----------------------------------------------------------------------------------------------------------------
         read15to8: begin
-            if(count1==9'd374 && data_count==4'd8) begin
+            if(count1==9'd149 && data_count==4'd8) begin
                 state<=readack;
                 data_count<=0;
                 sda_link<=1'b1;
                 sda_reg<=1'b1;
             end
 
-            else if (count1==29'd124) begin   
+            else if (count1==29'd49) begin   
                 state<=read15to8;
                 data_count<=data_count+1;
                 case(data_count)
@@ -250,10 +297,10 @@ else begin
         end
     //-----------------------------------------------------------------------------------------------------------------
         readack: begin
-            if(count1==9'd374) begin
+            if(count1==9'd149) begin
                 sda_reg<=1'b0;
             end
-            else if( count1==9'd249) begin   
+            else if( count1==9'd99) begin   
                 state<=read7to0;
                 sda_reg<=1'b1;
                 sda_link<=1'b0;
@@ -264,14 +311,14 @@ else begin
         end
     //-----------------------------------------------------------------------------------------------------------------
         read7to0: begin
-            if(count1==9'd374 && data_count==4'd8) begin
+            if(count1==9'd149 && data_count==4'd8) begin
                 state<=nack;
                 data_count<=1'b0;
                 sda_link<=1'b1;
                 sda_reg<=1'b1;
             end
 
-            else if (count1==9'd124) begin
+            else if (count1==9'd49) begin
                 state<=read7to0;
                 data_count<=data_count+1;
                 case(data_count)
@@ -291,7 +338,7 @@ else begin
         end
     //-----------------------------------------------------------------------------------------------------------------
         nack: begin
-            if (count1==9'd374) begin
+            if (count1==9'd149) begin
                 sda_reg<=1'b0;
                 state<=stop;
             end
@@ -301,7 +348,7 @@ else begin
         end
     //-----------------------------------------------------------------------------------------------------------------
         stop: begin
-            if(count1==9'd124) begin    
+            if(count1==9'd49) begin    
                 sda_reg<=1'b1;
                 state<=idle;
             end
@@ -331,13 +378,13 @@ else begin
 //-----------------------------------------------------------------------------------------------------------
        start: begin
 
-        if(count1==9'd124)  
+        if(count1==9'd49)  
             begin    
                 sda_reg<=1'b0;
                 sda_link=1'b1;
                 state<=address;
                 data_count<=4'd0;
-                address_reg<={4'b1001,i_address,1'b0};
+                address_reg<={islave_addr[7:1],1'b0};
             end
 
         else begin
@@ -346,7 +393,7 @@ else begin
        end
 //-----------------------------------------------------------------------------------------------------------
         address: begin
-            if (count1==9'd374) begin
+            if (count1==9'd149) begin
                 if (data_count==4'd8) begin
                     state<=addack;
                     data_count<=4'd0;
@@ -376,7 +423,7 @@ else begin
 //-----------------------------------------------------------------------------------------------------------
         addack: begin
 
-            if (!sda && count1==9'd124) begin
+            if (!sda && count1==9'd49) begin
                     state<=pointer;
                     pointer_reg<={6'b000000,pointer_bit};  
                     sda_link<=1'b1;
@@ -384,7 +431,7 @@ else begin
                     data_count<=4'd0;
              end
 
-            else if(  count1 ==9'd249) begin
+            else if(  count1 ==9'd99) begin
                     state<=pointer;
                     pointer_reg<={6'b000000,pointer_bit};  
                     sda_link<=1'b1;
@@ -398,7 +445,7 @@ else begin
         end
 //-----------------------------------------------------------------------------------------------------------    
         pointer: begin
-            if(count1==9'd374) begin
+            if(count1==9'd149) begin
                 if(data_count==4'd8) begin
                  state<=pointerack;
                  sda_link<=1'b0;
@@ -428,13 +475,13 @@ else begin
         end
 //-------------------------------------------------------------------------------------------------------------- 
      pointerack: begin
-        if(!sda && count1==9'd124) begin
-            data_reg<=i_data;
+        if(!sda && count1==9'd49) begin
+            data_reg<=idata_i[15:0];
            state<=write15to8;
            sda_link<=1'b1;
         end
-         else if(  count1==9'd249) begin
-            data_reg<=i_data;
+         else if(  count1==9'd99) begin
+            data_reg<=idata_i[15:0];
             state<=write15to8;
             sda_link<=1'b1;
         end
@@ -443,14 +490,14 @@ else begin
      end
 //-----------------------------------------------------------------------------------------------------------------
      write15to8: begin
-        if(count1==9'd374 && data_count==4'd8) begin
+        if(count1==9'd149 && data_count==4'd8) begin
             state<=writeack;
             data_count<=4'b0;
             sda_link<=1'b0;
             sda_reg<=1'b1;
          end
 
-         else if (count1==9'd374) begin    
+         else if (count1==9'd149) begin    
             state<=write15to8;
             data_count<=data_count+1;
             case(data_count)
@@ -470,11 +517,11 @@ else begin
      end
 //-----------------------------------------------------------------------------------------------------------------
      writeack: begin
-        if(count1==9'd124 && !sda) begin
+        if(count1==9'd49 && !sda) begin
             state<=write7to0;
             sda_link<=1'b1;
         end
-        else if( count1==9'd249) begin   
+        else if( count1==9'd99) begin   
             state<=write7to0;
             sda_link<=1'b1;
         end
@@ -483,14 +530,14 @@ else begin
      end
 //-----------------------------------------------------------------------------------------------------------------
       write7to0: begin
-        if(count1==9'd374 && data_count==4'd8) begin
+        if(count1==9'd149 && data_count==4'd8) begin
             state<=writeack2;
             data_count<=4'b0;
             sda_link<=1'b0;
             sda_reg<=1'b1;
          end
 
-         else if (count1==9'd374) begin    
+         else if (count1==9'd149) begin    
             state<=write7to0;
             data_count<=data_count+1;
             case(data_count)
@@ -510,11 +557,11 @@ else begin
      end
 //-----------------------------------------------------------------------------------------------------------------
       writeack2: begin
-        if(count1==9'd124 && !sda) begin
+        if(count1==9'd49 && !sda) begin
             state<=stop;
             sda_link<=1'b1;
         end
-        else if( count1==9'd249 ) begin   
+        else if( count1==9'd99 ) begin   
             state<=stop;
             sda_link<=1'b1;
         end
@@ -523,7 +570,7 @@ else begin
      end
 //-----------------------------------------------------------------------------------------------------------------
        stop: begin
-        if(count1==9'd124) begin     
+        if(count1==9'd49) begin     
             sda_reg<=1'b1;
             state<=idle;
         end
