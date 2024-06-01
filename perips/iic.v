@@ -171,9 +171,9 @@ else begin
                 state<=address;
                 data_count<=4'd0;
                 if(ptr_write)
-                    address_reg<={islave_addr[7:1],1'b0};
+                    address_reg<={islave_addr[6:0],1'b0};
                 else
-                    address_reg<={islave_addr[7:1],1'b1};
+                    address_reg<={islave_addr[6:0],1'b1};
             end
             else begin
                 state<=start;

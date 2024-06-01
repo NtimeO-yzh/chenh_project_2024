@@ -105,5 +105,5 @@ set_property IOSTANDARD LVCMOS33 [get_ports io_sda]
 set_property PACKAGE_PIN N22 [get_ports io_sda]
 
 
-set_property PULLUP true [get_ports scl]
-set_property PULLUP true [get_ports sda]
+set_property PULLUP true [get_ports io_scl]
+set_property PULLUP true [get_ports io_sda]

@@ -369,7 +369,7 @@ module ex(
                     temp_reg_we = `WriteEnable;
                     temp_reg_waddr = temp_reg_waddr_i;
                     temp_mem_raddr = 32'h7002_0000;//zzzzzzzzzzzzzzzzz
-                    temp_reg_wdata = {24'b0,mem_rdata_i[14:7]}; 
+                    temp_reg_wdata = {24'b0,mem_rdata_i[14:7]}; //
                 end else begin
                     temp_reg_we = `WriteDisable;
                     temp_reg_waddr = `ZeroWord;
