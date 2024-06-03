@@ -351,7 +351,7 @@ module ex(
             temp_mem_we = `WriteEnable;//zzzzzzzzzzzzzzzzz
             temp_mem_raddr = `ZeroWord;//zzzzzzzzzzzzzzzzz
             temp_mem_waddr = 32'h7003_0000;//zzzzzzzzzzzzzzzzz
-            temp_mem_wdata = 32'h2000_0091;//zzzzzzzzzzzzzzzzz
+            temp_mem_wdata = 32'h3000_0091;//zzzzzzzzzzzzzzzzz
             temp_reg_we = `WriteDisable;//zzzzzzzzzzzzzzzzz
             temp_reg_wdata = 32'b0;//zzzzzzzzzzzzzzzzz
             temp_reg_waddr = reg_waddr_i;//zzzzzzzzzzzzzzzzz

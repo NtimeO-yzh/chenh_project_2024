@@ -154,7 +154,7 @@ else begin
             iic_status <= 32'b1;
             sda_link<=1;    
             sda_reg<=1;     
-            if (count2==25'd4_999) begin
+            if (count2==25'd999) begin
                 count2<=25'd0;
                 state<=start;
             end
@@ -374,13 +374,13 @@ else begin
     //-----------------------------------------------------------------------------------------------------------------
     endcase
     end
-else begin
+else if(!rd) begin
     case (state)
        idle: 
        begin
          sda_link<=1;    
          sda_reg<=1;     
-         if (count2==25'd4_999) begin
+         if (count2==25'd999) begin
             count2<=25'd0;
             state<=start;
          end
